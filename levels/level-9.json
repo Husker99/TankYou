@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "name": "Level 9",
+  "grid": {
+    "columns": 13,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 0,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 11,
+      "row": 4,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 11,
+      "row": 3,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 12,
+      "row": 3,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 12,
+      "row": 4,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 11,
+      "row": 5,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 11,
+      "row": 2,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 10,
+      "row": 7,
+      "facing": "north",
+      "type": "brown"
+    },
+    {
+      "column": 10,
+      "row": 0,
+      "facing": "north",
+      "type": "brown"
+    }
+  ],
+  "walls": [
+    {
+      "column": 2,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 3,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 4,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 5,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 7,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 9,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 8,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 7,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 10,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 5,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 4,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 3,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 2,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 1,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 1,
+      "row": 2,
+      "type": "hole"
+    }
+  ]
+}

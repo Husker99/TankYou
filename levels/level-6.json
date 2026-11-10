@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "name": "Level 6",
+  "grid": {
+    "columns": 13,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 9,
+      "row": 5,
+      "facing": "north",
+      "type": "teal"
+    }
+  ],
+  "walls": [
+    {
+      "column": 5,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 2,
+      "type": "solid"
+    }
+  ]
+}

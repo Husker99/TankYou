@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "name": "Level 1",
+  "grid": {
+    "columns": 12,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 9,
+      "row": 4,
+      "facing": "north",
+      "type": "sentry"
+    }
+  ],
+  "walls": [
+    {
+      "column": 6,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 2,
+      "type": "solid"
+    }
+  ]
+}
