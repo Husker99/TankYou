@@ -23,6 +23,7 @@
   const tank = {}, enemy = {};
   let enemies = [];
   let shells = [], smoke = [], bursts = [], embers = [], phase = 'playing';
+  let campaignCombat = null, playerHearts = 1, hitGrace = 0;
   let active = !document.hidden, cooldown = 0, clickCooldown = 0, tread = 0, last = 0;
   let mouse = { x: 820, y: 155 }, previousStatus = '';
   let pointerTarget = { ...mouse }, aimTracking = false;
@@ -75,6 +76,11 @@
   }
   function restart() {
     const loaded = Levels.compile(currentLevel);
+    playerHearts = campaignCombat ? campaignCombat.hearts : 1; hitGrace = 0;
+    document.getElementById('combat-hearts').hidden = !campaignCombat;
+    Levels.renderHearts(document.getElementById('combat-hearts'),playerHearts,campaignCombat?.maxHearts||3);
+    document.getElementById('campaign-result').hidden = true;
+    document.getElementById('play-again').hidden = false;
     world.width = loaded.width; world.height = loaded.height;
     camera.x = world.width / 2; camera.y = world.height / 2;
     canvas.width = world.width; canvas.height = world.height;
@@ -89,7 +95,7 @@
       Object.assign(enemies[i], { reload: openingDelay, openingDelay, charge: 0 });
     }
     for (const e of enemies) Object.assign(e, { vx: 0, vy: 0, tread: 0, path: [], thinkTimer: 0, burstTimer: 1.3, resting: false,
-      scanTimer: .2, reactionTimer: 0, pendingThreat: null, dodgeTime: 0, dodgeCooldown: 0, dodgeX: 0, dodgeY: 0, turnClearance: null, burst: null, lastTactic: null, shieldTime: 0, shieldCooldown: 0, offenseTime: 0, shieldIdle: 0 });
+      scanTimer: .2, reactionTimer: 0, pendingThreat: null, dodgeTime: 0, dodgeCooldown: 0, dodgeX: 0, dodgeY: 0, turnClearance: null, burst: null, lastTactic: null, shieldTime: 0, shieldCooldown: 0, offenseTime: 0, shieldIdle: 0, bankPlan: null, bankScanTimer: 0 });
     for (const e of enemies) if (Levels.aiTypes[e.type].mobile) {
       e.age = 0; e.routeSeed = Math.random() * 10000; e.preferredDistance = 300 + Math.random() * 80;
       e.routeDirections = [[0,-1],[1,0],[0,1],[-1,0]];
@@ -100,11 +106,11 @@
     cooldown = 0; clickCooldown = 0; tread = 0; phase = 'playing'; active = !document.hidden && !editing;
     mouse = { x: enemy.x, y: enemy.y };
     pointerTarget = { ...mouse }; aimTracking = false;
-    result.hidden = true; stopEngine(); stopRocketAudio();
+    result.hidden = true; document.getElementById('quick-play-result').hidden = true; stopEngine(); stopRocketAudio();
     for (const a of Object.values(pools).flat()) { a.pause(); a.currentTime = 0; }
   }
-  document.getElementById('reset').onclick = restart;
-  document.getElementById('play-again').onclick = restart;
+  document.getElementById('reset').onclick = () => { if (!campaignCombat) restart(); };
+  document.getElementById('play-again').onclick = () => { if (!campaignCombat) restart(); };
   function aim(e) {
     if (editing) return;
     const r = canvas.getBoundingClientRect();
@@ -129,7 +135,7 @@
     if (e.target.matches?.('input,textarea,select,[contenteditable="true"]')) return;
     const k = e.key.toLowerCase();
     if (k === 'f2') { e.preventDefault(); if(!e.repeat)showCollisions=!showCollisions;return; }
-    if (k === 'r' && !e.repeat) { e.preventDefault(); restart(); return; }
+    if (k === 'r' && !e.repeat) { e.preventDefault(); if (!campaignCombat) restart(); return; }
     if (k === ' ' && e.target.closest?.('button')) return;
     if (!['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'escape'].includes(k)) return;
     e.preventDefault();
@@ -386,6 +392,56 @@
     }
     return true;
   }
+  // A bank candidate must hit one real wall, then reach the target before
+  // another obstacle. Use the same expanded-wall geometry as live projectiles.
+  function traceBankShot(e,angle,target,requireHit=true,range=0) {
+    const speed=Levels.aiTypes[e.type].shellSpeed;
+    const shot={x:e.x,y:e.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed};
+    const first=firstContact(shot,shot.vx*8,shot.vy*8);
+    if(!first||first.shield) return null;
+    const duration=8*first.t;
+    if(shotTankContact(shot,shot.vx*duration,shot.vy*duration,target,0,duration)!==null)return null;
+    shot.x+=shot.vx*duration;shot.y+=shot.vy*duration;reflectShot(shot,first);
+    const remaining=8-duration;if(remaining<=0)return null;
+    const second=firstContact(shot,shot.vx*remaining,shot.vy*remaining);
+    const legTime=remaining*(second?second.t:1);
+    const hit=shotTankContact(shot,shot.vx*legTime,shot.vy*legTime,target,0,legTime);
+    if(requireHit&&hit===null)return null;
+    if(!requireHit&&speed*(duration+legTime)<range-2)return null;
+    return {angle,bank:true,range:requireHit?speed*(duration+legTime*hit):range};
+  }
+  function findBankShot(e,target) {
+    const type=Levels.aiTypes[e.type];
+    if(!['sentry','elite','red'].includes(e.type)||(type.maxBounces??1)<1)return null;
+    const faces=[{axis:'x',value:0},{axis:'x',value:world.width},{axis:'y',value:0},{axis:'y',value:world.height}];
+    for(const w of walls)if(w.type!=='hole')faces.push({axis:'x',value:w.x},{axis:'x',value:w.x+w.width},{axis:'y',value:w.y},{axis:'y',value:w.y+w.height});
+    let best=null;
+    for(const face of faces){
+      // Reflect the target across the face. Correct the face for the rotated
+      // shell's thickness before testing the candidate against the whole room.
+      let angle=Math.atan2(target.y-e.y,target.x-e.x);
+      for(let i=0;i<5;i++){
+        const ex=Math.abs(Math.cos(angle))*bulletHitHalfLength+Math.abs(Math.sin(angle))*bulletHitHalfWidth;
+        const ey=Math.abs(Math.sin(angle))*bulletHitHalfLength+Math.abs(Math.cos(angle))*bulletHitHalfWidth;
+        const offset=face.axis==='x'?ex:ey;
+        const plane=face.value+Math.sign(e[face.axis]-face.value)*offset;
+        angle=Math.atan2((face.axis==='y'?2*plane-target.y:target.y)-e.y,(face.axis==='x'?2*plane-target.x:target.x)-e.x);
+      }
+      const plan=traceBankShot(e,angle,target);
+      if(plan&&(!best||plan.range<best.range)&&safeAIShot(e,type.shellSpeed,angle))best=plan;
+    }
+    return best;
+  }
+  function enemyShotPlan(e,dt) {
+    const type=Levels.aiTypes[e.type],point=type.elite?eliteAim(e,type):tank;
+    const target={...tank,x:point.x,y:point.y,vx:0,vy:0};
+    if(lineOfSight(e))return {angle:Math.atan2(point.y-e.y,point.x-e.x),range:Math.hypot(point.x-e.x,point.y-e.y),bank:false,target};
+    if(!['sentry','elite','red'].includes(e.type))return null;
+    e.bankScanTimer=(e.bankScanTimer||0)-dt;
+    if(e.bankScanTimer<=0){e.bankPlan=findBankShot(e,target);e.bankScanTimer=.2;}
+    const plan=e.bankPlan&&traceBankShot(e,e.bankPlan.angle,target);
+    return plan?{...plan,target}:null;
+  }
   function emitShot(owner, speed, angle = owner.turret) {
     const a = angle;
     const weapon = owner === tank ? null : Levels.aiTypes[owner.type];
@@ -574,19 +630,20 @@
         const angle=e.burst.aim+(e.burst.index-1)*5*Math.PI/180;
         const ray={x:e.x,y:e.y,vx:Math.cos(angle)*type.shellSpeed,vy:Math.sin(angle)*type.shellSpeed};
         const wall=firstContact(ray,Math.cos(angle)*e.burst.range,Math.sin(angle)*e.burst.range);
-        if(!wall&&safeAIShot(e,type.shellSpeed,angle)&&shells.filter(s=>s.owner===e&&s.life>0).length<type.shellLimit)emitShot(e,type.shellSpeed,angle);
+        const clear=e.burst.bank?!!traceBankShot(e,angle,{...tank,vx:0,vy:0},false,e.burst.range):!wall;
+        if(clear&&safeAIShot(e,type.shellSpeed,angle)&&shells.filter(s=>s.owner===e&&s.life>0).length<type.shellLimit)emitShot(e,type.shellSpeed,angle);
         e.burst.index++;e.burst.timer+=.18;
         if(e.burst.index===3){e.burst=null;e.reload=type.reload;e.path=[];e.thinkTimer=0;}
       }
       return;
     }
     e.reload=Math.max(0,e.reload-dt);
-    const predicted=eliteAim(e,type),angle=Math.atan2(predicted.y-e.y,predicted.x-e.x);
+    const plan=enemyShotPlan(e,dt),predicted=eliteAim(e,type),angle=plan?plan.angle:Math.atan2(predicted.y-e.y,predicted.x-e.x);
     e.turret+=clamp(angleDelta(e.turret,angle),-type.turnRate*dt,type.turnRate*dt);
-    const ready=e.reload===0&&Math.abs(angleDelta(e.turret,angle))<.08&&lineOfSight(e)&&safeAIShot(e,type.shellSpeed)&&shells.filter(s=>s.owner===e&&s.life>0).length<type.shellLimit;
+    const ready=!!plan&&e.reload===0&&Math.abs(angleDelta(e.turret,angle))<.08&&(!plan.bank||!!traceBankShot(e,e.turret,plan.target))&&safeAIShot(e,type.shellSpeed)&&shells.filter(s=>s.owner===e&&s.life>0).length<type.shellLimit;
     e.charge=ready?e.charge+dt:0;
     if(e.charge>=type.chargeTime){
-      e.burst={aim:e.turret,range:Math.hypot(predicted.x-e.x,predicted.y-e.y),index:0,timer:0};e.charge=0;
+      e.burst={aim:e.turret,range:plan.range,bank:plan.bank,index:0,timer:0};e.charge=0;
       updateEliteWeapon(0,e,type);
     }
   }
@@ -595,9 +652,11 @@
     const type = Levels.aiTypes[enemy.type];
     if(type.elite){updateEliteWeapon(dt,enemy,type);return;}
     enemy.reload = Math.max(0, enemy.reload - dt);
-    const target = Math.atan2(tank.y - enemy.y, tank.x - enemy.x);
+    const plan = enemyShotPlan(enemy,dt);
+    const target = plan ? plan.angle : Math.atan2(tank.y - enemy.y, tank.x - enemy.x);
     enemy.turret += clamp(angleDelta(enemy.turret, target), -type.turnRate * dt, type.turnRate * dt);
-    const ready = enemy.reload === 0 && Math.abs(angleDelta(enemy.turret, target)) < .08 && lineOfSight(enemy) &&
+    const ready = !!plan && enemy.reload === 0 && Math.abs(angleDelta(enemy.turret, target)) < .08 &&
+      (!plan.bank || !!traceBankShot(enemy,enemy.turret,plan.target)) &&
       shells.filter(s => s.owner === enemy && s.life > 0).length < type.shellLimit && safeAIShot(enemy, type.shellSpeed);
     enemy.charge = ready ? enemy.charge + dt : 0;
     if (enemy.charge >= type.chargeTime) { emitShot(enemy, type.shellSpeed); enemy.reload = type.reload; enemy.charge = 0; }
@@ -633,6 +692,14 @@
   }
   function hitTank(s, victim) {
     if(victim.shieldTime>0) return;
+    if(victim === tank && campaignCombat) {
+      s.life=0;
+      if(hitGrace>0)return;
+      playerHearts=Math.max(0,playerHearts-1);campaignCombat.hearts=playerHearts;
+      Levels.renderHearts(document.getElementById('combat-hearts'),playerHearts,campaignCombat.maxHearts);
+      campaignCombat.onHealthChange?.(playerHearts);
+      if(playerHearts>0){hitGrace=1.2;puff(tank.x,tank.y);sound('impact');return;}
+    }
     s.life = 0; victim.alive = false; victim.vx = 0; victim.vy = 0; puff(victim.x, victim.y, true); sound('impact');
     bursts.push({ x: victim.x, y: victim.y, age: 0 });
   }
@@ -643,6 +710,7 @@
     document.getElementById('result-detail').textContent = phase === 'won' ? '' : 'One hit is all it takes. Try using the cover.';
     document.getElementById('play-again').textContent = phase === 'won' ? 'Play again' : 'Play again · R';
     result.hidden = false;
+    window.TankGame.onRoundEnd?.({ won: phase === 'won', hearts: playerHearts });
   }
   function updateEffects(dt) {
     for(const p of embers){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}
@@ -656,6 +724,7 @@
     if (editing || !active) { stopEngine(); stopRocketAudio(); return; }
     updateEffects(dt);
     if (phase !== 'playing') { stopRocketAudio(); return; }
+    hitGrace = Math.max(0, hitGrace - dt);
     cooldown = Math.max(0, cooldown - dt);
     clickCooldown = Math.max(0, clickCooldown - dt);
     const ox = tank.x, oy = tank.y;
@@ -733,7 +802,7 @@
       ctx.fillStyle='rgba(55,155,255,.22)';ctx.strokeStyle='#479eff';ctx.lineWidth=2.5;
       ctx.beginPath();ctx.arc(t.x,t.y,48,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
     }
-    ctx.save(); ctx.translate(t.x, t.y); ctx.rotate(t.hull); ctx.scale(scale, scale);
+    ctx.save(); if(t===tank&&hitGrace>0)ctx.globalAlpha=Math.floor(hitGrace*12)%2?.35:1; ctx.translate(t.x, t.y); ctx.rotate(t.hull); ctx.scale(scale, scale);
     for (const y of [-20, 12]) {
       ctx.fillStyle = palette.tracks; ctx.fillRect(-21, y, 42, 8);
       ctx.save(); ctx.beginPath(); ctx.rect(-21, y, 42, 8); ctx.clip(); ctx.fillStyle = palette.tread;
@@ -742,7 +811,7 @@
     }
     ctx.fillStyle = palette.body; ctx.fillRect(-19, -14, 38, 28);
     ctx.fillStyle = palette.front; ctx.fillRect(5, -12, 11, 24); ctx.restore();
-    ctx.save(); ctx.translate(t.x, t.y); ctx.rotate(t.turret); ctx.scale(scale, scale);
+    ctx.save(); if(t===tank&&hitGrace>0)ctx.globalAlpha=Math.floor(hitGrace*12)%2?.35:1; ctx.translate(t.x, t.y); ctx.rotate(t.turret); ctx.scale(scale, scale);
     ctx.fillStyle = palette.barrel; ctx.fillRect(0, -4, 34, 8);
     ctx.fillStyle = palette.turret; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = isEnemy && t.charge > 0 && (!Levels.aiTypes[t.type].elite || Math.floor(t.charge*12)%2===0) ? '#f0c37b' : palette.hatch;
@@ -828,7 +897,7 @@
   window.TankGame = {
     getLevel: () => Levels.clone(currentLevel),
     setEditing(value) { editing = value; keys.clear(); active = !value && !document.hidden; stopEngine(); stopRocketAudio(); result.hidden = true; },
-    loadLevel(input) { currentLevel = Levels.validate(input); editing = false; restart(); }
+    loadLevel(input, options = {}) { const next = Levels.validate(input); const maxHearts=Number.isInteger(options.maxHearts)?clamp(options.maxHearts,1,30):3; campaignCombat = options.campaign ? { ...options, maxHearts, hearts: clamp(Math.floor(options.hearts || 3),1,maxHearts) } : null; currentLevel = next; editing = false; restart(); }
   };
   restart(); requestAnimationFrame(frame);
 })();

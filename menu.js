@@ -1,11 +1,12 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const Game = window.TankGame, Levels = window.TankLevels;
+  const Game = window.TankGame, Levels = window.TankLevels, Campaign = window.TankCampaign;
   const music = new Audio('audio/menu-theme.m4a');
   music.id = 'menu-theme'; music.volume = .25; music.loop = true; music.preload = 'auto'; music.hidden = true;
   document.body.appendChild(music);
-  let inMenu = false, muted = false;
+  let inMenu = false, muted = true, quickPlayIndex = -1, cleared = false;
+  const quickLevels = Object.values(Levels.builtInLevels);
   function updateMusicButton() {
     const audible = !muted && !music.paused;
     $('menu-music').setAttribute('aria-label', audible ? 'Mute music' : 'Unmute music');
@@ -24,7 +25,17 @@
   function leaveMenu() {
     inMenu = false; stopMusic(); $('menu-view').hidden = true; $('game-header').hidden = false;
   }
-  function showMenu() {
+  function showMenuPage(quickPlay = false) {
+    $('menu-home').hidden = quickPlay;
+    $('quick-play-view').hidden = !quickPlay;
+  }
+  $('menu-quick-play').onclick = () => { showMenuPage(true); $('quick-play-back').focus?.(); };
+  $('quick-play-back').onclick = () => { showMenuPage(); $('menu-quick-play').focus?.(); };
+  function showMenu(quickPlay = false) {
+    hideEditorScreens();Campaign?.suspend();
+    quickPlayIndex = -1; cleared = false;
+    showMenuPage(quickPlay);
+    $('campaign-view').hidden = true;
     inMenu = true; Game.setEditing(true);
     music.pause();
     music.src = Math.random() < .25 ? 'audio/menu-messing-around.m4a' : 'audio/menu-theme.m4a';
@@ -34,20 +45,79 @@
     startMusic();
   }
   function playLevel(level) {
+    hideEditorScreens();Campaign?.suspend();
+    quickPlayIndex = quickLevels.indexOf(level); cleared = false;
+    $('quick-play-result').hidden = true;
+    $('campaign-view').hidden = true;
     leaveMenu(); $('editor-view').hidden = true; $('game-view').hidden = false;
     $('reset').hidden = false; $('open-editor').hidden = false;
     Game.loadLevel(level);
   }
-  for (const level of Object.values(Levels.builtInLevels)) {
+  for (const level of quickLevels) {
     const button = document.createElement('button');
     button.type = 'button'; button.textContent = level.name;
     button.onclick = () => playLevel(level);
     $('menu-levels').appendChild(button);
   }
+  function hideEditorScreens() { $('editor-choice-view').hidden=true;$('map-editor-view').hidden=true; }
+  function showEditorChooser() {
+    Campaign?.suspend();quickPlayIndex=-1;cleared=false;Game.setEditing(true);
+    $('menu-view').hidden=true;$('game-view').hidden=true;$('editor-view').hidden=true;$('campaign-view').hidden=true;
+    $('game-header').hidden=true;$('map-editor-view').hidden=true;$('editor-choice-view').hidden=false;
+    inMenu=true;startMusic();
+  }
+  $('editor-choice-back').onclick=()=>showMenu();
   const originalEditor = $('open-editor').onclick;
-  $('open-editor').onclick = () => { leaveMenu(); originalEditor(); };
+  $('choose-level-editor').onclick = () => { hideEditorScreens();Campaign?.suspend(); quickPlayIndex = -1; cleared = false; $('campaign-view').hidden = true; leaveMenu(); originalEditor(); };
+  $('open-editor').onclick = showEditorChooser;
   $('menu-editor').onclick = () => $('open-editor').onclick();
-  $('home-logo').onclick = showMenu;
+  $('home-logo').onclick = () => showMenu();
+  Game.onRoundEnd = ({ won }) => {
+    if(Campaign?.inCombat()) {
+      Campaign.finishCombat(won);
+      $('quick-play-result').hidden=true;$('play-again').hidden=true;
+      $('campaign-result').hidden=false;
+      $('campaign-continue').textContent=won?'Campaign Map':'View Run';
+      if(!won){$('result-detail').hidden=false;$('result-detail').textContent='Your hearts are gone. This run has ended.';}
+      return;
+    }
+    cleared = won && quickPlayIndex >= 0;
+    $('quick-play-result').hidden = !cleared;
+    $('result-next-level').disabled = !cleared || quickPlayIndex >= quickLevels.length - 1;
+  };
+  $('result-level-select').onclick = () => { if (cleared) showMenu(true); };
+  $('result-next-level').onclick = () => {
+    if (cleared && quickPlayIndex >= 0 && quickPlayIndex + 1 < quickLevels.length) playLevel(quickLevels[quickPlayIndex + 1]);
+  };
+  if(Campaign) {
+    Campaign.configure({
+      onMap() {
+        hideEditorScreens();
+        quickPlayIndex=-1;cleared=false;Game.setEditing(true);
+        $('menu-view').hidden=true;$('game-view').hidden=true;$('editor-view').hidden=true;
+        $('game-header').hidden=true;$('campaign-view').hidden=false;
+        inMenu=true;startMusic();
+      },
+      onCombat(level,options) {
+        hideEditorScreens();
+        quickPlayIndex=-1;cleared=false;leaveMenu();
+        $('campaign-view').hidden=true;$('editor-view').hidden=true;$('game-view').hidden=false;
+        $('reset').hidden=true;$('open-editor').hidden=true;
+        Game.loadLevel(level,{...options,campaign:true});
+      },
+      onMenu:()=>showMenu()
+    });
+    $('menu-roguelike').onclick=()=>Campaign.open();
+    $('campaign-continue').onclick=()=>Campaign.open();
+  }
+  if(window.TankMapEditor) {
+    window.TankMapEditor.configure({
+      onOpen(){Campaign?.suspend();Game.setEditing(true);hideEditorScreens();$('map-editor-view').hidden=false;$('editor-choice-view').hidden=true;$('game-header').hidden=true;$('menu-view').hidden=true;$('game-view').hidden=true;$('editor-view').hidden=true;$('campaign-view').hidden=true;inMenu=false;stopMusic();},
+      onBack:showEditorChooser,
+      onPlay:map=>Campaign.startMap(map)
+    });
+    $('choose-map-editor').onclick=()=>window.TankMapEditor.open();
+  }
   $('menu-music').onclick = () => {
     if (!music.paused && !muted) { muted = true; stopMusic(); }
     else { muted = false; startMusic(); }
@@ -57,6 +127,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMusic(); else startMusic(); });
   window.addEventListener('blur', stopMusic);
   window.addEventListener('focus', startMusic);
+  updateMusicButton();
   const query = new URLSearchParams(window.location.search);
   if (query.get('editor') === '1') { leaveMenu(); }
   else if (Levels.builtInLevels[query.get('level')]) { playLevel(Levels.builtInLevels[query.get('level')]); }

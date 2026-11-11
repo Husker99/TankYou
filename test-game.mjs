@@ -273,6 +273,46 @@ bounce(bullet(200,200,380,0),{nx:-1,ny:0,shield:{}});
 check(pools.shieldRicochet.reduce((n,a)=>n+a.plays,0)===shieldAudioBefore+1&&pools.ricochet.reduce((n,a)=>n+a.plays,0)===wallAudioBefore,'Shield bounce plays only the shield variation');
 check(pools.shieldRicochet.some(a=>a.plays>0&&a.playbackRate===1.15&&a.volume===.55),'Shield thud is brighter and softer');
 bounce(bullet(200,200,380,0),{nx:-1,ny:0});check(pools.ricochet.reduce((n,a)=>n+a.plays,0)===wallAudioBefore+1,'Wall bounce retains original sound');
+
+function bankSetup(type='sentry'){
+ setup();walls.splice(0,walls.length,{x:450,y:250,width:100,height:100,type:'solid'});
+ Object.assign(tank,{x:250,y:300,hull:0,vx:0,vy:0});
+ Object.assign(enemy,{x:750,y:300,hull:Math.PI,turret:Math.PI,type,reload:0,charge:0,bankPlan:null,bankScanTimer:0,shieldTime:0,shieldIdle:0,shieldCooldown:0,offenseTime:0,resting:true,burstTimer:100,burst:null,vx:0,vy:0});
+ shells=[];return enemy;
+}
+for(const type of ['sentry','elite','red']){
+ const banker=bankSetup(type),plan=enemyShotPlan(banker,.01);
+ check(!lineOfSight(banker)&&plan?.bank,type+' finds bank shot with blocked direct sight');
+ check(!!traceBankShot(banker,plan.angle,plan.target)&&safeAIShot(banker,240,plan.angle),type+' bank path reaches player safely');
+ banker.turret=plan.angle;updateEnemy(Levels.aiTypes[type].chargeTime+.001,banker);
+ check(shells.length===1&&(type==='sentry'||banker.burst?.bank),type+' starts firing a bank shot with usual windup');
+ if(type!=='sentry'){run(.19);run(.19);check(shells.length===3,type+' preserves three-shot spread burst for bank shots');}
+ banker.reload=999;run(4);check(!tank.alive,type+' bank shot hits player through live ricochet physics');
+}
+for(const type of ['brown','teal']){const banker=bankSetup(type);check(enemyShotPlan(banker,.01)===null,type+' does not plan bank shots');}
+let banker=bankSetup();walls.splice(0);check(enemyShotPlan(banker,.01)?.bank===false,'Direct shot preferred over available bank');
+banker=bankSetup();walls.splice(0,walls.length,{x:600,y:250,width:100,height:100,type:'solid'},{x:850,y:100,width:50,height:400,type:'solid'});Object.assign(banker,{x:650,y:150});Object.assign(tank,{x:650,y:450});
+let bankPlan=enemyShotPlan(banker,.01);check(bankPlan?.bank,'Interior wall face can provide a bank shot');
+let bankRay=bullet(banker.x,banker.y,Math.cos(bankPlan.angle)*240,Math.sin(bankPlan.angle)*240);let bankContact=firstContact(bankRay,bankRay.vx*8,bankRay.vy*8);const bankX=bankRay.x+bankRay.vx*8*bankContact.t,bankY=bankRay.y+bankRay.vy*8*bankContact.t;
+check(bankX>800&&bankX<850&&bankY>100&&bankY<500,'Chosen bank uses interior wall rather than arena boundary');
+const bankBuddy={x:(bankX+tank.x)/2,y:(bankY+tank.y)/2,hull:0,alive:true,type:'sentry',vx:0,vy:0};enemies.push(bankBuddy);check(!safeAIShot(banker,240,bankPlan.angle),'Ally on reflected leg blocks bank shot');
+enemies.pop();walls.push({x:bankX-50,y:bankY+45,width:100,height:25,type:'solid'});check(!traceBankShot(banker,bankPlan.angle,bankPlan.target),'Second obstruction invalidates reflected path');
+banker=bankSetup();const baselineBank=enemyShotPlan(banker,.01);walls.push({x:650,y:50,width:100,height:100,type:'hole'});check(!!traceBankShot(banker,baselineBank.angle,baselineBank.target),'Holes do not obstruct bank shots');
+const levelEleven=Levels.compile(Levels.builtInLevels['level-11']);check(levelEleven.enemies.length===5&&levelEleven.enemies.filter(e=>e.type==='red').length===3,'Level 11 includes supplied Red and Black tanks');
+
+banker=bankSetup();bankPlan=enemyShotPlan(banker,.01);banker.turret=bankPlan.angle;banker.reload=2;updateEnemy(.71,banker);check(shells.length===0,'Bank shot respects remaining reload');
+banker.reload=0;shells=[bullet(100,100,240,0,banker),bullet(200,100,240,0,banker)];updateEnemy(.71,banker);check(shells.length===2,'Bank shot respects active shell limit');
+banker=bankSetup();walls.splice(0,walls.length,{x:200,y:240,width:100,height:20,type:'solid'},{x:200,y:340,width:100,height:20,type:'solid'},{x:190,y:240,width:20,height:120,type:'solid'},{x:290,y:240,width:20,height:120,type:'solid'});check(enemyShotPlan(banker,.01)===null,'Enclosed player yields no false bank solution');
+
+let healthUpdates=[];window.TankGame.loadLevel(Levels.defaultLevel,{campaign:true,hearts:3,onHealthChange:h=>healthUpdates.push(h)});active=true;
+let heartShot=bullet(tank.x,tank.y,380,0);hitTank(heartShot,tank);check(tank.alive&&playerHearts===2&&heartShot.life===0,'Campaign hit consumes one heart without killing player');
+check(healthUpdates.join(',')==='2'&&(document.getElementById('combat-hearts').innerHTML.match(/heart-slot filled/g)||[]).length===2&&(document.getElementById('combat-hearts').innerHTML.match(/heart-slot empty/g)||[]).length===1,'Health updates persist through callback and HUD');
+heartShot=bullet(tank.x,tank.y,380,0);hitTank(heartShot,tank);check(playerHearts===2&&heartShot.life===0,'Grace period absorbs overlapping bullets');
+const graceBefore=hitGrace;enemies[0].reload=999;update(.1);check(hitGrace<graceBefore&&hitGrace>0,'Damage grace counts down during active combat');
+const healthBeforeReset=playerHearts;document.getElementById('reset').onclick();check(playerHearts===healthBeforeReset,'Room reset cannot restore campaign health');
+hitGrace=0;hitTank(bullet(tank.x,tank.y,380,0),tank);check(tank.alive&&playerHearts===1,'Campaign player survives with one remaining heart');
+hitGrace=0;hitTank(bullet(tank.x,tank.y,380,0),tank);check(!tank.alive&&playerHearts===0&&healthUpdates.join(',')==='2,1,0','Last campaign heart destroys tank');
+window.TankGame.loadLevel(Levels.defaultLevel);check(document.getElementById('combat-hearts').hidden&&campaignCombat===null,'Quick Play clears campaign health mode');hitTank(bullet(tank.x,tank.y,380,0),tank);check(!tank.alive,'Quick Play retains one-hit destruction');
 console.log(passed+' gameplay checks passed');
 `;
 vm.runInNewContext(source.replace(/\}\)\(\);\s*$/, tests + '\n})();'), context);

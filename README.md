@@ -115,3 +115,67 @@ visible bullet dimensions. Bullet-to-tank collisions and AI tank-hit prediction
 use the exact artwork bounds, without that extra margin. Wall padding remains
 unchanged. Standard shells have rounded noses; rockets have pointed noses,
 both contained within their existing artwork dimensions.
+
+Tan, Black, and Red can aim one-bounce bank shots when direct sight is blocked.
+They reflect a target across arena edges and solid wall faces, accounting for
+bullet thickness, then verify both legs using live collision geometry. Holes
+are ignored and shields are not used as planned bank surfaces. The shortest
+safe valid route is preferred; searches are refreshed every 0.2 seconds and
+trajectories are checked again before firing. Direct shots take priority.
+Firing cadence, active-shell limits, friendly-fire prediction, and Elite burst
+spread remain in force. Brown and Teal do not plan bank shots.
+
+## First-map campaign prototype
+
+Roguelike opens a browser-saved campaign map with eight encounter rows and at
+most four choices per row. The route graph mixes single paths, two-way forks,
+and two three-way forks. Encounters are seeded per new run: 50% combat, 15%
++1 heart, and 35% power-up category, equally divided across Stygian, Lethe,
+Phleg, and Ache. Combat uses existing built-in levels with later rows drawing
+from later levels. Category rewards are recorded as requisitions; there are
+no invented upgrade effects yet.
+
+Runs start with three hearts. Each hit costs one heart with 1.2 seconds of
+damage grace; health carries between rooms and heart nodes restore one health up to the default three-heart capacity.
+Zero hearts ends the run. Victory returns to the map through Campaign Map.
+Room restart is disabled in campaign combat. Quick Play and editor playtests
+retain their one-hit rules and ordinary restart behavior.
+
+Progress is saved locally in this browser. Leaving during combat preserves
+the pending encounter and remaining hearts; resuming restarts that encounter
+with the saved hearts. Completing the eighth encounter clears Map 1 only;
+Maps 2 and 3 are not implemented. Active runs can be replaced with New Run,
+with an explicit confirmation. Menu music starts muted by default, and can
+be enabled with the home menu's sound icon at its existing 25% volume.
+
+`test-campaign.mjs` checks map constraints, probability distributions, node
+locking, combat progression, rewards, save/resume, defeat, and completion.
+
+Campaign health is shown as 30px filled or outlined heart slots at the top
+right of the map and battlefield. Runs store maxHearts separately from health,
+defaulting to three; future Styx upgrades can expand the slot capacity.
+
+## Roguelike map editor
+
+Level Editor now opens a Map / Level chooser. Map edits campaign encounter
+routes; Level opens the existing arena editor. Maps have 2–12 rows and four
+available positions per row. Place assigns an encounter (and a specific
+Level 1–11 or random combat level). Connect links a source to the next row,
+with up to three outgoing paths; selecting the same pair removes the path.
+Erase removes an encounter and its incoming connections. Starts and exits
+connect automatically to the first and final rows.
+
+Refill All Hearts uses a red medical cross inside a circle and heals to the
+current maximum capacity. It is manually placeable in custom maps; generated
+maps retain their existing event weights.
+
+Maps support draft autosave, a separate browser map library, undo/redo,
+JSON import/export, templates, and Play Map. Play Map starts a new campaign
+using that authored graph. Saved campaign runs include their map definition
+so custom routes survive reload. New Run repeats the current custom map.
+Map files use kind "tank-you-map" and are distinct from arena-level files.
+Playable/exported maps must have reachable nodes, no early dead ends, and
+only adjacent-row connections. Incomplete drafts can still be saved locally.
+
+The new test-map-editor.mjs suite covers editing, validation, save/load,
+import/export, custom-map play, full heals, and custom campaign restoration.
