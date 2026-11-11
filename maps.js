@@ -3,13 +3,25 @@
   const Levels=window.TankLevels;
   const types={combat:'Combat',heart:'+1 Heart',refill:'Refill All Hearts',stygian:'Styx',lethe:'Lethe',phleg:'Phleg',ache:'Ache'};
   function validate(input,playable=true){
+    if(input&&input.columns!==3&&Array.isArray(input.nodes)){
+      const remap=new Map(),nodes=[];
+      for(let row=0;row<input.rows;row++){
+        const items=input.nodes.filter(n=>n.row===row).sort((a,b)=>a.column-b.column);
+        if(items.length>3)throw Error('This older map has more than three encounters in a row. Reduce it before importing.');
+        const choices=items.length===1?[[0],[1],[2]]:items.length===2?[[0,1],[0,2],[1,2]]:[[0,1,2]];
+        const best=choices.sort((a,b)=>items.reduce((sum,n,i)=>sum+(n.column/2-a[i])**2,0)-items.reduce((sum,n,i)=>sum+(n.column/2-b[i])**2,0))[0];
+        items.forEach((n,i)=>{const id=`${row}-${best[i]}`;remap.set(n.id,id);nodes.push({...n,id,column:best[i],next:[...n.next]});});
+      }
+      input={...input,columns:3,nodes:nodes.map(n=>({...n,next:n.next.map(id=>remap.get(id)||id)}))};
+    }
     if(!input||input.version!==1||input.kind!=='tank-you-map')throw Error('Choose a Tank You roguelike map file.');
     if(typeof input.name!=='string'||!input.name.trim()||input.name.length>60)throw Error('Give the map a name of 1–60 characters.');
-    if(!Number.isInteger(input.rows)||input.rows<2||input.rows>12)throw Error('Use 2–12 rows. Maps have four available positions per row.');
-    if(!Array.isArray(input.nodes)||input.nodes.length>input.rows*4)throw Error('A row can contain at most four encounters.');
+    if(!Number.isInteger(input.rows)||input.rows<2||input.rows>15)throw Error('Maps support up to 15 rows with three positions per row.');
+    if(!Array.isArray(input.nodes)||input.nodes.length>input.rows*3)throw Error('A row can contain at most three encounters.');
+    const mapNumber=input.mapNumber??1;if(!Number.isInteger(mapNumber)||mapNumber<1||mapNumber>3)throw Error('Choose Map 1, 2, or 3.');
     const ids=new Set();
     const nodes=input.nodes.map(n=>{
-      if(!n||!Number.isInteger(n.row)||n.row<0||n.row>=input.rows||!Number.isInteger(n.column)||n.column<0||n.column>3||n.id!==`${n.row}-${n.column}`||ids.has(n.id))throw Error('Each encounter must have its own position inside the map.');
+      if(!n||!Number.isInteger(n.row)||n.row<0||n.row>=input.rows||!Number.isInteger(n.column)||n.column<0||n.column>2||n.id!==`${n.row}-${n.column}`||ids.has(n.id))throw Error('Each encounter must have its own position inside the map.');
       ids.add(n.id);
       if(!Object.hasOwn(types,n.type))throw Error('Choose a supported encounter type.');
       if(!Array.isArray(n.next)||n.next.length>3||new Set(n.next).size!==n.next.length)throw Error('An encounter can branch to at most three different choices.');
@@ -29,16 +41,31 @@
       }
       if(reached.size!==nodes.length)throw Error('Every encounter must be reachable from the first row.');
     }
-    return {version:1,kind:'tank-you-map',name:input.name.trim(),rows:input.rows,nodes};
+    return {version:1,kind:'tank-you-map',name:input.name.trim(),rows:input.rows,mapNumber,columns:3,nodes};
   }
   function compile(input,seed){
     const map=validate(input),levels=Object.keys(Levels.builtInLevels);let a=seed>>>0;
-    return map.nodes.map(n=>{a=(Math.imul(a,1664525)+1013904223)>>>0;const low=Math.floor(n.row/map.rows*Math.max(0,levels.length-3));return {...n,next:[...n.next],levelId:n.levelId==='random'?levels[Math.min(levels.length-1,low+a%Math.min(3,levels.length))]:n.levelId,x:135+n.column*210,y:780-n.row*644/(map.rows-1)};});
+    return map.nodes.map(n=>{a=(Math.imul(a,1664525)+1013904223)>>>0;const low=Math.floor(n.row/map.rows*Math.max(0,levels.length-3));return {...n,next:[...n.next],levelId:n.levelId==='random'?levels[Math.min(levels.length-1,low+a%Math.min(3,levels.length))]:n.levelId,x:135+n.column*315,y:780-n.row*644/(map.rows-1)};});
   }
   function template(){
-    const counts=[2,2,3,2,4,3,2,1],links=[[[0],[1]],[[0,1,2],[2]],[[0],[0],[1]],[[0,1,2],[3]],[[0],[1],[1],[2]],[[0],[0,1],[1]],[[0],[0]]];
-    const cols=counts.map(count=>Array.from({length:count},(_,c)=>count===1?1:Math.round(c*3/(count-1))));
-    return {version:1,kind:'tank-you-map',name:'Untitled Map',rows:8,nodes:counts.flatMap((count,row)=>Array.from({length:count},(_,c)=>({id:`${row}-${cols[row][c]}`,row,column:cols[row][c],type:row===3&&c===1?'refill':row%3===1&&c===0?'heart':row%3===2&&c===1?'stygian':'combat',levelId:'random',next:row===7?[]:links[row][c].map(i=>`${row+1}-${cols[row+1][i]}`)})))};
+    const counts=[1,2,3,2,3,2,2,1,3,2,3,2,2,2,1];
+    const cols=counts.map(count=>Array.from({length:count},(_,c)=>count===1?1:Math.round(c*2/(count-1))));
+    const nodes=counts.flatMap((count,row)=>Array.from({length:count},(_,c)=>{
+      const next=row===14?[]:cols[row+1].filter((col,i)=>count===1||Math.round(i*(count-1)/Math.max(1,counts[row+1]-1))===c||i===Math.round(c*(counts[row+1]-1)/Math.max(1,count-1))).map(col=>`${row+1}-${col}`);
+      return {id:`${row}-${cols[row][c]}`,row,column:cols[row][c],type:row===3&&c===1?'refill':row%3===1&&c===0?'heart':row%3===2&&c===1?'stygian':'combat',levelId:'random',next};
+    }));
+    return {version:1,kind:'tank-you-map',name:'Untitled Map',rows:15,columns:3,nodes};
   }
-  window.TankMaps={types,validate,compile,template};
+
+  function expand(input){
+    const map=validate(input,false),oldRows=map.rows;
+    if(oldRows===15)return map;
+    let ends=map.nodes.filter(n=>n.row===oldRows-1);
+    for(let row=oldRows;row<15;row++){
+      const next=ends.map(n=>({id:`${row}-${n.column}`,row,column:n.column,type:'combat',levelId:'random',next:[]}));
+      ends.forEach((n,i)=>{n.next=[next[i].id];});map.nodes.push(...next);ends=next;
+    }
+    map.rows=15;return map;
+  }
+  window.TankMaps={expand,types,validate,compile,template};
 })();

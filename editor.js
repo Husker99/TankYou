@@ -35,6 +35,7 @@
     const select = $('saved-levels');
     select.replaceChildren(new Option('Choose a level', ''));
     for (const [id, level] of Object.entries(Levels.builtInLevels)) select.add(new Option(`${level.name} (built-in)`, `builtin:${id}`));
+    for (const entry of window.TankEncounters?.list() || []) select.add(new Option(`${entry.level.name} (Roguelike)`, `encounter:${entry.id}`));
     for (const item of readLibrary()) select.add(new Option(String(item.level.name || 'Untitled level'), item.id));
     select.value = savedId;
   }
@@ -196,6 +197,7 @@
   };
   $('load-saved').onclick = () => {
     const key = $('saved-levels').value;
+    if(key.startsWith('encounter:')){const entry=window.TankEncounters?.get(key.slice(10));if(!entry)return;replace(Levels.validate(entry.level));message(`Loaded “${entry.level.name}”. Edit and export a copy when ready.`);return;}
     if (key.startsWith('builtin:')) {
       const level = Levels.builtInLevels[key.slice(8)];
       if (!level) return;
@@ -249,14 +251,11 @@
     };
     const x = (spawn.column + .5) * cellSize, y = (spawn.row + .5) * cellSize;
     const a = Levels.directions[spawn.facing];
-    ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.scale(previewScale, previewScale);
-    ctx.fillStyle = palette.tracks; ctx.fillRect(-21, -20, 42, 8); ctx.fillRect(-21, 12, 42, 8);
-    ctx.fillStyle = palette.body; ctx.fillRect(-19, -14, 38, 28);
-    ctx.fillStyle = palette.front; ctx.fillRect(5, -12, 11, 24);
-    ctx.fillStyle = palette.barrel; ctx.fillRect(0, -4, 34, 8);
-    ctx.fillStyle = palette.turret; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.save();ctx.translate(x,y);ctx.scale(previewScale,previewScale);
+    Levels.paintTank(ctx,palette,{hull:a,turret:a,tread:0,type:ai?spawn.type:'player'});
     ctx.restore();
   }
+
   function previewHole(w) {
     const x=(w.column+.5)*cellSize, y=(w.row+.5)*cellSize, radius=cellSize*.47;
     ctx.fillStyle='#a19c8d'; ctx.beginPath(); ctx.arc(x,y,radius,0,Math.PI*2); ctx.fill();

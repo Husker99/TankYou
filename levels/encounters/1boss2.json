@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "name": "1boss2",
+  "grid": {
+    "columns": 12,
+    "rows": 10,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 6,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 4,
+      "row": 1,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 4,
+      "row": 8,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 9,
+      "row": 7,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "facing": "north",
+      "type": "sentry"
+    }
+  ],
+  "walls": [
+    {
+      "column": 2,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 7,
+      "type": "solid"
+    }
+  ]
+}

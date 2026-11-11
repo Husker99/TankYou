@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "name": "Level 1b2",
+  "grid": {
+    "columns": 12,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 2,
+      "row": 1,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 6,
+      "row": 7,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 2,
+      "row": 7,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 9,
+      "row": 4,
+      "facing": "north",
+      "type": "teal"
+    }
+  ],
+  "walls": []
+}

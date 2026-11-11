@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+let click,tones=0;
+const param={setValueAtTime(){},exponentialRampToValueAtTime(){}};
+const context={document:{addEventListener(name,fn){if(name==='click')click=fn;}},window:{AudioContext:class{constructor(){this.currentTime=0;this.state='running';this.destination={};}createOscillator(){tones++;return {frequency:param,connect(){},start(){},stop(){},disconnect(){}};}createGain(){return {gain:param,connect(){},disconnect(){}};}}}};
+vm.runInNewContext(fs.readFileSync(new URL('./ui-audio.js',import.meta.url),'utf8'),context);
+const check=(ok,name)=>{if(!ok)throw Error(name);};
+click({target:{closest:()=>({disabled:false})}});check(tones===1,'Button click plays one UI sound');
+click({target:{closest:()=>({disabled:true})}});check(tones===1,'Disabled button stays silent');
+click({target:{closest:()=>null}});check(tones===1,'Battlefield and background clicks do not play button sound');
+context.window.TankUIAudio.countdown();check(tones===2,'Countdown plays a distinct tone');
+console.log('4 UI audio checks passed');

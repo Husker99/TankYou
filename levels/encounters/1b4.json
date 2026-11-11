@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "name": "Level 1b4",
+  "grid": {
+    "columns": 12,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 11,
+    "row": 8,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 2,
+      "row": 5,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 8,
+      "row": 6,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 2,
+      "row": 2,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 4,
+      "row": 7,
+      "facing": "north",
+      "type": "red"
+    }
+  ],
+  "walls": [
+    {
+      "column": 11,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 2,
+      "type": "solid"
+    }
+  ]
+}

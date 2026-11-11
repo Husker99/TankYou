@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "name": "1a2",
+  "grid": {
+    "columns": 10,
+    "rows": 6,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 1,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 2,
+      "row": 4,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 4,
+      "row": 4,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 6,
+      "row": 4,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 8,
+      "row": 2,
+      "facing": "north",
+      "type": "brown"
+    },
+    {
+      "column": 8,
+      "row": 4,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "facing": "north",
+      "type": "brown"
+    },
+    {
+      "column": 4,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    }
+  ],
+  "walls": []
+}

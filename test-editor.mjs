@@ -20,6 +20,7 @@ const context = {
   window: { location: { search: '' } }
 };
 vm.runInNewContext(fs.readFileSync(new URL('levels.js', root), 'utf8'), context);
+vm.runInNewContext(fs.readFileSync(new URL('encounters.js', root), 'utf8'), context);
 context.window.TankGame = { getLevel() { return context.window.TankLevels.clone(context.window.TankLevels.defaultLevel); }, setEditing(v) { context.editing = v; }, loadLevel(v) { context.played = context.window.TankLevels.validate(v); } };
 const tests = `
 return (async()=>{
@@ -78,6 +79,10 @@ setTool('scenery');$('scenery-type').value='solid';place({column:4,row:4});check
 $('scenery-type').value='hole';place({column:4,row:4});$('save-level').onclick();check(readLibrary().some(v=>v.level.walls.some(w=>w.type==='hole')),'Saving preserves holes');
 setTool('erase');check($('ai-options').hidden&&$('scenery-options').hidden,'Erase hides dropdowns');place({column:4,row:4});check(!draft.walls.some(w=>w.type==='hole'),'Erase removes hole');
 setTool('ai');$('ai-type').value='red';place({column:3,row:3});check(draft.enemies[0].type==='red','Editor places Red Charge tanks');check(Levels.validate(draft,false).enemies[0].type==='red','Editor exports Red Charge type');
+setTool('ai');$('ai-type').value='pink';place({column:3,row:3});check(draft.enemies[0].type==='pink'&&Levels.validate(draft,false).enemies[0].type==='pink','Editor places and exports Pink Flamethrower tanks');
+
+refreshLibrary();check($('saved-levels').options.filter(o=>o.value.startsWith('encounter:')).length===12,'Editor load menu includes all Roguelike encounters and bosses');
+for(const encounterId of ['1a2','1b3','1boss2']){const entry=window.TankEncounters.get(encounterId);$('saved-levels').value='encounter:'+encounterId;$('load-saved').onclick();check(JSON.stringify(draft)===JSON.stringify(Levels.validate(entry.level)),'Editor loads Roguelike encounter '+encounterId);draft.name='Edited copy';check(entry.level.name!=='Edited copy','Editing draft does not mutate bundled encounter '+encounterId);}
 console.log(passed+' editor workflow checks passed');
 })();
 `;

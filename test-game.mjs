@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
-const source = fs.readFileSync(new URL('./game.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('./game.js', import.meta.url), 'utf8').replace('    beginCountdown();', '    countdown=0;');
 const elements = {};
-const element = () => ({ style: {}, hidden: false, textContent: '', addEventListener() {}, appendChild() {}, setAttribute() {}, focus() {}, getContext() { return {}; } });
+const element = () => ({ style: {}, hidden: false, textContent: '', addEventListener() {}, appendChild() {}, setAttribute() {}, focus() {}, getContext() { return {fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){}}; } });
 const context = {
   console, Math,
   Audio: class { constructor() { this.paused = true; this.plays = 0; } addEventListener() {} play() { this.plays++; return Promise.resolve(); } pause() { this.paused = true; } },
@@ -17,7 +17,7 @@ function setup(){restart();active=true;
 world.width=1000;world.height=625;
 walls.splice(0,walls.length,{x:300,y:160,width:40,height:205},{x:465,y:420,width:175,height:35},{x:660,y:220,width:40,height:175});
 Object.assign(tank,{x:180,y:470,hull:-Math.PI/2,turret:-.46});
-Object.assign(enemy,{x:820,y:155,hull:Math.PI/2,turret:2.68,reload:999});enemies=[enemy];}
+Object.assign(enemy,{x:820,y:155,hull:Math.PI/2,turret:2.68,reload:999,firstShot:false});enemies=[enemy];}
 
 function run(seconds){for(let i=0;i<Math.ceil(seconds*240);i++)update(1/240);}
 function bullet(x,y,vx,vy,owner=tank){return{x,y,vx,vy,owner,bounces:0,life:8,smokeDistance:0};}
@@ -64,12 +64,12 @@ const blank={version:1,name:'Blank',grid:{columns:10,rows:10,cellSize:100},playe
 const roundtrip=Levels.validate(JSON.parse(JSON.stringify(template)));check(JSON.stringify(roundtrip)===JSON.stringify(Levels.validate(template)),'Level export/import roundtrip preserves placements');
 const multi={version:1,name:'Two enemies',grid:{columns:10,rows:10,cellSize:100},player:{column:1,row:8,facing:'north'},enemies:[{column:7,row:1,type:'sentry',facing:'south'},{column:8,row:3,type:'sentry',facing:'west'}],walls:[]};
 window.TankGame.loadLevel(multi);check(enemies.length===2&&world.height===1000,'Loads multiple AI spawns and grid size');
-check(enemies.every(e=>e.hull===-Math.PI/2&&e.turret===-Math.PI/2),'Every loaded AI starts north');
+check(enemies.every(e=>e.hull===-Math.PI/2),'Every loaded AI hull starts north');
 for(const e of enemies)e.reload=999;
 shells=[bullet(enemies[0].x,enemies[0].y+50,0,-380)];run(.1);check(!enemies[0].alive&&enemies[1].alive&&phase==='playing','Room continues after first AI is destroyed');
 shells=[bullet(enemies[1].x,enemies[1].y+50,0,-380)];run(.1);check(phase==='won','Win requires eliminating all AI');
 restart();check(enemies.length===2&&enemies.every(e=>e.alive),'Restart restores every AI spawn');
-enemies.forEach(e=>e.reload=0);active=true;run(3.5);check(shells.some(s=>s.owner===enemies[0])&&shells.some(s=>s.owner===enemies[1]),'Each AI aims and fires independently');
+enemies.forEach(e=>e.reload=0);active=true;run(.2);check(shells.some(s=>s.owner===enemies[0])&&shells.some(s=>s.owner===enemies[1]),'Each AI aims and fires independently');
 window.TankGame.setEditing(true);const frozenX=tank.x;keys.add('d');run(.2);check(tank.x===frozenX,'Editor pauses combat');
 const beforeInvalid=JSON.stringify(window.TankGame.getLevel());rejects(()=>window.TankGame.loadLevel(blank),'Invalid level cannot replace current room');check(JSON.stringify(window.TankGame.getLevel())===beforeInvalid,'Failed level load is transactional');
 window.TankGame.loadLevel(multi);enemies.forEach(e=>e.reload=999);tank.x=500;tank.y=100;tank.hull=0;Object.assign(enemies[0],{x:561,y:100,hull:0});Object.assign(enemies[1],{x:622,y:100,hull:0});keys.add('d');run(.2);check(Math.abs(tank.x-500)<.001&&Math.abs(enemies[0].x-561)<.001,'Pushing cannot overlap a second AI tank');
@@ -128,7 +128,7 @@ restart();brown=enemies.find(e=>e.type==='brown');brown.age=0;const firstRoute=J
 check(Levels.aiTypes.brown.moveSpeed===78&&Levels.aiTypes.brown.reload===2,'Variation preserves movement speed and reload tuning');
 
 restart();smoke=[];bursts=[];shells=[];enemies[0].alive=false;const painter=drawTank,order=[];drawTank=(t)=>order.push(t.alive?'living':'grave');
-for(const name of ['clearRect','save','restore','translate','scale','fillRect','stroke','beginPath','moveTo','lineTo','arc','setLineDash','rect','clip'])ctx[name]=()=>{};
+for(const name of ['drawImage','strokeRect','clearRect','save','restore','translate','scale','fillRect','stroke','beginPath','moveTo','lineTo','arc','setLineDash','rect','clip'])ctx[name]=()=>{};
 render();drawTank=painter;check(order[0]==='grave'&&order.slice(1).every(v=>v==='living'),'All death markers draw before every living tank');
 
 setup();mouse={x:100,y:100};pointerTarget={x:500,y:100};aimTracking=true;updateAim(.1);check(mouse.x>100&&mouse.x<500,'Crosshair eases toward pointer instead of snapping');check(Math.abs(tank.turret-Math.atan2(mouse.y-tank.y,mouse.x-tank.x))<1e-8,'Turret follows delayed crosshair');
@@ -181,9 +181,9 @@ trail({...bullet(520,400,634.8,0,exhaustTank),rocket:true},500,400,.03);check(em
 const spark=embers[0],sparkCount=embers.length;check(Number.isFinite(spark.x)&&Number.isFinite(spark.vx),'Exhaust particles have valid world positions');updateEffects(1);check(embers.length===0,'Exhaust sparks fade away');restart();check(embers.length===0,'Restart clears exhaust particles');
 check(Math.abs(bulletHitHalfLength-12.0016875)<1e-8&&Math.abs(bulletHitHalfWidth-6.00084375)<1e-8,'Bullet collision dimensions also increased 15 percent');check(rocketFlameScale===2,'Rocket flame length and width doubled');
 
-window.TankGame.loadLevel(Levels.builtInLevels['level-7']);check(enemies[0].openingDelay>=1&&enemies[0].openingDelay<=2,'First enemy opening delay is between one and two seconds');
-check(enemies.slice(1).every((e,i)=>e.openingDelay-enemies[i].openingDelay>=.6-1e-8&&e.openingDelay-enemies[i].openingDelay<=.8+1e-8),'Each subsequent delay adds random 0.6 to 0.8 seconds');
-const savedOpening=enemies[0].openingDelay;restart();check(enemies[0].openingDelay!==savedOpening,'Restart rerolls opening delays');
+window.TankGame.loadLevel(Levels.builtInLevels['level-7']);check(enemies[0].openingDelay>=0&&enemies[0].openingDelay<=1,'First enemy opening delay is between zero and one second');
+check(enemies.every(e=>e.openingDelay>=0&&e.openingDelay<=1),'All enemies have bounded independent delays without cumulative staggering');
+const savedOpening=enemies[0].openingDelay;restart();check(enemies[0].openingDelay!==savedOpening&&enemies.every(e=>Math.abs(angleDelta(e.turret,Math.atan2(tank.y-e.y,tank.x-e.x)))<1e-8),'Restart rerolls delays and keeps turrets ready to aim');
 active=true;movementSound(true,1);check(Math.abs(engine.volume-.11)<1e-8,'Movement sound volume is half its previous level');stopEngine();
 check(Object.values(Levels.aiTypes).filter(t=>!t.elite).every(t=>t.reload===2&&t.chargeTime===.7),'Later reloads and aiming warning remain unchanged');
 
@@ -200,7 +200,7 @@ window.TankGame.loadLevel(Levels.builtInLevels['level-1']);black=enemies[0];blac
 let coverRoute=planMobileRoute(black),coverGoal=coverRoute.at(-1);check(coverGoal&&!lineOfSight({...black,...coverGoal}),'Elite prefers a covered destination during cooldown');
 black.reload=0;let attackRoute=planMobileRoute(black),attackGoal=attackRoute.at(-1);check(attackGoal&&lineOfSight({...black,...attackGoal}),'Elite prefers a firing lane when ready');
 black.x=950;black.y=450;black.reload=3;const coverX=black.x,coverY=black.y;updateMobileEnemy(.2,black);check(black.x===coverX&&black.y===coverY,'Elite holds existing cover during cooldown');
-check(eliteType.dodgeChance>brownType.dodgeChance||eliteType.dodgeChance>.55,'Elite dodges more reliably than Brown');check(eliteType.reactionTime===.08&&eliteType.awareness>260,'Elite has earlier but bounded threat reaction');
+check(eliteType.dodgeChance>brownType.dodgeChance||eliteType.dodgeChance>.55,'Elite dodges more reliably than Brown');check(eliteType.reactionTime===.03&&eliteType.scanInterval===.05&&eliteType.dodgeCooldown===.7&&eliteType.awareness>260,'Elite has earlier but bounded threat reaction');
 window.TankGame.loadLevel(eliteFixture);black=enemies[0];black.turret=Math.PI;black.reload=0;updateEnemy(.71,black);black.alive=false;updateEnemy(.5,black);check(shells.length===1,'Destroyed Elite cannot finish its burst');restart();check(enemies[0].burst===null,'Restart clears pending Elite burst');
 check(Levels.validate(JSON.parse(JSON.stringify(eliteFixture))).enemies[0].type==='elite','Elite type survives level import and export');
 
@@ -313,6 +313,112 @@ const healthBeforeReset=playerHearts;document.getElementById('reset').onclick();
 hitGrace=0;hitTank(bullet(tank.x,tank.y,380,0),tank);check(tank.alive&&playerHearts===1,'Campaign player survives with one remaining heart');
 hitGrace=0;hitTank(bullet(tank.x,tank.y,380,0),tank);check(!tank.alive&&playerHearts===0&&healthUpdates.join(',')==='2,1,0','Last campaign heart destroys tank');
 window.TankGame.loadLevel(Levels.defaultLevel);check(document.getElementById('combat-hearts').hidden&&campaignCombat===null,'Quick Play clears campaign health mode');hitTank(bullet(tank.x,tank.y,380,0),tank);check(!tank.alive,'Quick Play retains one-hit destruction');
+
+const pinkType=Levels.aiTypes.pink;check(pinkType.label==='Pink (Flamethrower)'&&pinkType.flamethrower&&pinkType.elite,'Pink type is registered');
+check(['chargeTime','shellLimit','moveSpeed','turnRate','dodgeChance','reactionTime','scanInterval','dodgeCooldown','awareness'].every(k=>pinkType[k]===eliteType[k]),'Pink inherits Black burst, movement, and dodge tuning');check(pinkType.reload===1.8&&eliteType.reload===2,'Pink reload is 10% shorter without changing Black');
+check(pinkType.palette.tracks===eliteType.palette.tracks&&pinkType.palette.body!==eliteType.palette.body,'Pink has distinct body and shared treads');
+const pinkFixture=Levels.clone(Levels.builtInLevels['level-11']);pinkFixture.walls=[];pinkFixture.enemies=[{column:1,row:3,facing:'north',type:'pink'}];pinkFixture.player={column:6,row:3,facing:'north'};
+function pinkSetup(options={}){window.TankGame.loadLevel(pinkFixture,options);active=true;const p=enemies[0];Object.assign(p,{x:150,y:350,hull:0,turret:0,flameCooldown:0,reload:0,resting:true,burstTimer:100,thinkTimer:100,scanTimer:100});Object.assign(tank,{x:650,y:350,vx:0,vy:0});return p;}
+let pink=pinkSetup();check(Levels.validate(pinkFixture).enemies[0].type==='pink','Pink survives level import');updateEnemy(.01,pink);check(pink.flame?.phase==='fire'&&pink.flame.time===2.9&&flameReach(pink)===24&&shells.length===0,'Flame begins small immediately with no warning cone or gunshot');
+const lockedFlameAim=pink.flame.angle;tank.y=550;updateEnemy(.5,pink);check(pink.flame.angle===lockedFlameAim&&pink.turret===lockedFlameAim,'Flame aim remains locked as player moves');updateEnemy(.5,pink);check(Math.abs(flameReach(pink)-312)<1e-8&&shells.length===0,'Flame reaches half extension after 1 second without gunfire');updateEnemy(1,pink);check(flameReach(pink)===600&&shells.length===0,'Flame reaches full length after 2 seconds');
+updateEnemy(.89,pink);check(flameReach(pink)===600&&shells.length===0,'Full-length stream holds for 0.9 seconds and suppresses gun');updateEnemy(.011,pink);check(pink.flame===null&&pink.flameCooldown===5&&shells.length===0,'Flame ends and starts five-second cooldown');
+tank.y=350;updateEnemy(.051,pink);check(shells.length===1&&pink.burst,'Burst weapon resumes during flame cooldown');
+pink=pinkSetup();updateEnemy(.01,pink);pink.burst={aim:0,index:1,timer:0,range:500};updateEnemy(.1,pink);check(shells.length===0,'Even a pending burst cannot emit shots while flame charges');
+check(flameRange===600&&Math.abs(2*Math.sin(flameHalfAngle)*flameRange-200)<1e-8,'Flame reaches six cells and spans two cells at maximum width');
+pink.flame.age=2;shells=[bullet(450,350,380,0,tank),bullet(500,350,240,0,pink),{...bullet(550,350,634.8,0,enemy),rocket:true,maxBounces:0}];tank.y=600;applyFlames();check(shells.every(s=>s.life===0)&&smoke.length>0,'Flame cancels player bullets, allied bullets, and rockets with smoke');
+shells=[bullet(450,500,380,0),bullet(900,350,380,0)];applyFlames();check(shells.every(s=>s.life>0),'Shots outside cone and beyond range survive');
+check(flameTouches(pink,{x:750,y:350,angle:0,hx:10,hy:5})&&!flameTouches(pink,{x:850,y:350,angle:0,hx:10,hy:5}),'Cone range is measured from muzzle');
+walls.push({x:400,y:250,width:100,height:200,type:'solid'});check(!flameTouches(pink,{x:650,y:350,angle:0,hx:30,hy:30})&&flameTouches(pink,{x:350,y:350,angle:0,hx:10,hy:5}),'Wall stops flame while near-side objects remain affected');
+shells=[bullet(650,350,380,0)];applyFlames();check(shells[0].life>0,'Bullet behind cover is protected from flames');walls[0].type='hole';check(flameTouches(pink,{x:650,y:350,angle:0,hx:30,hy:30}),'Flame passes over holes');applyFlames();check(shells[0].life===0,'Flame cancels bullet across hole');
+walls.splice(0,walls.length,{x:400,y:350,width:100,height:100,type:'solid'});check(!flameTouches(pink,{x:650,y:380,angle:0,hx:5,hy:5})&&flameTouches(pink,{x:650,y:320,angle:0,hx:5,hy:5}),'Wall occludes only covered portion of cone');
+pink=pinkSetup({campaign:true,hearts:3});updateEnemy(.01,pink);updateEnemy(2,pink);applyFlames();check(playerHearts===2&&tank.alive,'Flame contact removes one campaign heart');applyFlames();check(playerHearts===2,'Damage grace prevents repeated damage within same instant');hitGrace=0;applyFlames();check(playerHearts===1&&tank.alive,'Sustained exposure follows normal damage grace rules');
+pink=pinkSetup();updateEnemy(.01,pink);updateEnemy(2,pink);applyFlames();check(!tank.alive,'Flame contact is lethal in one-hit Quick Play');
+pink=pinkSetup();updateEnemy(.01,pink);const stoppedX=pink.x,stoppedY=pink.y;Object.assign(pink,{resting:false,path:[{x:250,y:350}],dodgeTime:.4,dodgeX:1,dodgeY:0});updateMobileEnemy(.1,pink);check(pink.x===stoppedX&&pink.y===stoppedY,'Pink holds position while telegraphing locked flame');
+const pausedTime=pink.flame.time;editing=true;update(.5);check(pink.flame.time===pausedTime,'Pause freezes flame timers');editing=false;
+hitTank(bullet(pink.x,pink.y,380,0),pink);shells=[bullet(450,350,380,0)];applyFlames();check(!pink.alive&&!pink.flame&&shells[0].life>0,'Destroyed Pink immediately stops warning, flame, and cancellation');
+restart();check(enemies[0].flame===null&&enemies[0].flameCooldown===enemies[0].openingDelay,'Restart clears flame state and respects opening delay');
+pink=pinkSetup();walls.push({x:190,y:300,width:10,height:100,type:'solid'});check(!updateFlamethrower(.01,pink)&&!pink.flame,'Blocked muzzle cannot project flames through nearby cover');
+pink=pinkSetup();updateEnemy(.01,pink);check(!flameTouches(pink,{x:650,y:350,angle:0,hx:30,hy:30}),'Growing flame does not damage targets beyond visible reach');shells=[bullet(650,350,380,0)];tank.y=600;applyFlames();check(shells[0].life>0,'Growing flame cannot cancel distant bullets before extending');updateEnemy(2,pink);applyFlames();check(shells[0].life===0,'Extended flame cancels bullet when visible reach arrives');
+
+window.TankGame.loadLevel(Levels.defaultLevel);active=true;let countdownTones=0;window.TankUIAudio={countdown(){countdownTones++;}};beginCountdown();
+const countdownStart={x:tank.x,y:tank.y,reload:enemies[0].reload};keys.add('d');fire('click');update(.5);
+check(shells.length===0&&tank.x===countdownStart.x&&tank.y===countdownStart.y&&enemies[0].reload===countdownStart.reload,'Countdown blocks movement, shooting, and enemy timers');
+check(countdownTones===1,'Countdown sounds once on three');check(document.getElementById('combat-countdown').textContent==='3','Countdown starts at three');update(.5);check(document.getElementById('combat-countdown').textContent==='2','Countdown shows two after one second');update(1);check(document.getElementById('combat-countdown').textContent==='1','Countdown shows one after two seconds');
+active=false;update(.5);check(countdown===1,'Countdown freezes while game is inactive');active=true;update(1);check(countdown===0&&document.getElementById('combat-countdown').hidden,'Countdown ends at three seconds');check(countdownTones===3,'Countdown sounds once per displayed number without an end beep');
+update(.01);check(tank.x>countdownStart.x,'Combat input resumes after countdown');
+window.TankGame.loadLevel(Levels.defaultLevel,{campaign:true,hearts:3});check(document.getElementById('game-header').hidden&&!document.getElementById('combat-hearts').hidden,'Campaign combat hides logo header and retains heart HUD');
+window.TankGame.loadLevel(Levels.defaultLevel);check(!document.getElementById('game-header').hidden&&document.getElementById('combat-hearts').hidden,'Quick Play restores normal header');
+
+function abilitySetup(upgrades,extra={}){
+ const level=Levels.clone(Levels.builtInLevels['level-11']);level.walls=[];level.enemies=[{column:6,row:3,facing:'north',type:'elite'}];level.player={column:1,row:3,facing:'north'};
+ window.TankGame.loadLevel(level,{campaign:true,hearts:3,maxHearts:3,upgrades,...extra});active=true;countdown=0;Object.assign(tank,{x:150,y:350,hull:0,turret:0});Object.assign(enemies[0],{x:600,y:350,reload:999,resting:true,burstTimer:100,scanTimer:100,thinkTimer:100});return enemies[0];
+}
+let stunned=abilitySetup({blessing:1});activatePlayerAbilities();check(tank.shieldTime===3&&abilityState.shieldCooldown===0,'Blessing activates three seconds of shield before cooldown');
+let shieldBullet=bullet(400,350,-380,0,stunned);const playerShieldHit=firstContact(shieldBullet,-300,0);check(playerShieldHit?.shield===tank,'Player shield intercepts incoming bullet');bounce(shieldBullet,playerShieldHit);check(shieldBullet.life===0,'Blessing absorbs intercepted bullet');hitTank({life:1},tank);check(playerHearts===3&&tank.alive,'Blessing blocks damage');
+updatePlayerAbilities(3);check(tank.shieldTime===0&&abilityState.shieldCooldown===13,'Shield cooldown begins after shield deactivation');activatePlayerAbilities();check(tank.shieldTime===0,'Shield cannot be reused during cooldown');updatePlayerAbilities(13);activatePlayerAbilities();check(tank.shieldTime===3,'Shield is ready after full cooldown');
+stunned=abilitySetup({blessing:1,favored:1});activatePlayerAbilities();check(tank.shieldTime===5,'Favored extends shield to five seconds');shieldBullet={...bullet(400,350,-634.8,0,stunned),rocket:true,maxBounces:0};bounce(shieldBullet,firstContact(shieldBullet,-300,0));check(shieldBullet.life>0&&shieldBullet.vx>0,'Favored deflects an incoming rocket');
+stunned=abilitySetup({blessing:1,hero:1});activatePlayerAbilities();check(Math.abs(tank.shieldRadius**2-48**2*2)<1e-8,'Hero doubles shield area rather than diameter');stunned.x=240;applyShieldContact();check(!stunned.alive,'Hero damages enemy touching enlarged shield');
+stunned=abilitySetup({blessing:1,stun:1});activatePlayerAbilities();check(tank.shieldTime===3&&abilityState.stunArmed&&abilityState.stunCooldown===6,'One Q activates ready shield and arms stun together');fire('click');check(shells.length===0&&waves.length===1&&playerShotCount()===1&&!abilityState.stunArmed,'Stun wave replaces a bullet and uses one shot slot');
+updatePlayerAbilities(.7);check(stunned.stunTime===1,'Energy wave stuns a reached enemy for one second');
+Object.assign(stunned,{resting:false,path:[{x:700,y:350}],turret:1,hull:0,shieldTime:0,shieldCooldown:0,type:'red'});const frozen={x:stunned.x,y:stunned.y,hull:stunned.hull,turret:stunned.turret,reload:stunned.reload};
+updateMobileEnemy(.2,stunned);updateEnemy(.2,stunned);updateShield(.2,stunned);check(stunned.x===frozen.x&&stunned.y===frozen.y&&stunned.hull===frozen.hull&&stunned.turret===frozen.turret&&stunned.reload===frozen.reload&&!stunned.shieldTime,'Stun freezes movement, hull, turret, weapons, and ability activation');
+check(document.getElementById('ability-hud').innerHTML.includes('Shield')&&document.getElementById('ability-hud').innerHTML.includes('Stun'),'Battlefield HUD displays both Q abilities');
+stunned=abilitySetup({stun:1,grasp:1});activatePlayerAbilities();fire('click');updatePlayerAbilities(.7);check(stunned.stunTime===4,'Deaths Grasp extends stun to four seconds');updatePlayerAbilities(.25);check(stunned.stunTime===3.75,'Enemy stun duration counts down normally');
+stunned=abilitySetup({stun:1});activatePlayerAbilities();shells=Array.from({length:5},(_,i)=>bullet(100+i*30,100,380,0));fire('click');check(!waves.length&&abilityState.stunArmed,'Full five-shot capacity leaves stun armed');shells.pop();fire('click');check(waves.length===1&&playerShotCount()===5,'Stun wave uses the newly freed fifth slot');updatePlayerAbilities(1);check(!waves.length&&playerShotCount()===4,'Wave releases shot slot after reaching maximum range');activatePlayerAbilities();check(!abilityState.stunArmed,'Stun cannot rearm before six-second cooldown');updatePlayerAbilities(5);activatePlayerAbilities();check(abilityState.stunArmed,'Stun can rearm after six seconds');
+stunned=abilitySetup({stun:1});activatePlayerAbilities();fire('click');walls.push({x:400,y:300,width:100,height:100,type:'solid'});updatePlayerAbilities(.7);check(!stunned.stunTime,'Cover blocks stun wave');stunned=abilitySetup({stun:1});walls.push({x:400,y:300,width:100,height:100,type:'hole'});activatePlayerAbilities();fire('click');updatePlayerAbilities(.7);check(stunned.stunTime===1,'Holes do not block stun wave');
+let savedAbilities=null;abilitySetup({blessing:1,stun:1},{onAbilityChange:s=>{savedAbilities=s;}});activatePlayerAbilities();finishRound();check(savedAbilities.shieldTime===0&&savedAbilities.shieldCooldown===13&&savedAbilities.stunArmed,'Room end saves cooldown and armed shot');
+abilitySetup({blessing:1,stun:1},{abilityState:savedAbilities});activatePlayerAbilities();check(tank.shieldTime===3&&abilityState.stunArmed,'Next room refreshes both Q abilities');
+window.TankGame.loadLevel(Levels.defaultLevel);check(!playerUpgrades.blessing&&!waves.length&&!tank.shieldTime&&document.getElementById('ability-hud').hidden,'Quick Play clears campaign abilities');
+stunned=abilitySetup({stun:1});stunned.x=220;stunned.stunTime=1;const immobileX=stunned.x;movePlayer(1,0,.5);check(stunned.x===immobileX,'Stunned enemies cannot be pushed out of position');
+
+window.TankGame.loadLevel(mobileFixture);active=true;walls.splice(0);for(const e of enemies)e.reload=999;let cautious=enemies[0];Object.assign(cautious,{type:'brown',x:600,y:300,hull:0,resting:false,burstTimer:100,thinkTimer:100,path:[{x:600,y:150}],scanTimer:100,dodgeCooldown:0,dodgeTime:0});
+for(const owner of [tank,enemies[1],cautious]){shells=[bullet(450,250,240,0,owner)];check(movementThreatTime(cautious,0,0)===Infinity&&!safeBulletMovement(cautious,0,-78),'Movement prediction avoids crossing shell path regardless of owner');}
+const cautiousY=cautious.y;updateMobileEnemy(.1,cautious);check(cautious.y===cautiousY,'Mobile AI stops before walking into predicted bullet path');
+shells=[bullet(450,300,240,0),bullet(450,350,240,0)];const dodgeRng=Math.random;Math.random=()=>.1;check(beginDodge(cautious,shells[0])&&cautious.dodgeY<0,'Dodge chooses side that avoids a second bullet');Math.random=dodgeRng;
+Object.assign(cautious,{x:800,y:300,hull:0});walls.push({x:950,y:200,width:30,height:150,type:'solid'});shells=[bullet(850,250,380,0)];check(!safeBulletMovement(cautious,0,-78),'Movement prediction includes upcoming wall ricochet');shells[0].maxBounces=0;check(safeBulletMovement(cautious,0,-78),'Non-ricocheting rocket does not create phantom return path');
+window.TankGame.loadLevel(Levels.defaultLevel);active=true;walls.splice(0);Object.assign(tank,{x:150,y:150});Object.assign(enemies[0],{x:750,y:150,turret:Math.PI,reload:0});updateEnemy(.121,enemies[0]);check(shells.length===1,'Basic tank first shot is ready within 0.12 seconds after countdown');check(!enemies[0].firstShot&&enemies[0].reload===2,'First shot then returns to normal reload cadence');
+abilitySetup({blessing:1,stun:1},{abilityState:{shieldTime:2,shieldCooldown:10,stunCooldown:4,stunArmed:true}});check(abilityState.shieldTime===0&&abilityState.shieldCooldown===0&&abilityState.stunCooldown===0&&!abilityState.stunArmed,'Every battlefield starts with fresh ready abilities');
+
+const openingRng=Math.random;let openingIndex=0;const openingValues=[0,.4,.95];Math.random=()=>openingValues[openingIndex++]??.5;window.TankGame.loadLevel(Levels.builtInLevels['level-7']);Math.random=openingRng;check(enemies.map(e=>e.openingDelay).join(',')==='0,0.4,0.95','Every tank samples its own independent opening delay');
+window.TankGame.loadLevel(Levels.defaultLevel);active=true;walls.splice(0);Object.assign(tank,{x:150,y:150});Object.assign(enemies[0],{x:750,y:150,turret:Math.PI,reload:.8,openingDelay:.8,firstShot:true});updateEnemy(.4,enemies[0]);check(!shells.length,'Ordinary weapon waits through its opening delay');updateEnemy(.41,enemies[0]);check(shells.length===1,'Ordinary weapon fires once its opening delay expires');
+pink=pinkSetup();pink.reload=.8;pink.flameCooldown=.8;updateEnemy(.4,pink);check(!pink.flame&&!shells.length,'Pink flame and burst weapon both honor opening delay');updateEnemy(.41,pink);check(pink.flame?.phase==='fire','Pink flame becomes available when opening delay expires');
+
+abilitySetup({forged:3,rockets:3,lithe:1,swivel:1,executor:1});check(Math.abs(playerMovementSpeed()-135*1.3)<1e-8,'Three Forged Treads stacks grant thirty percent speed');check(Math.abs(playerBulletSpeed()-380*1.6)<1e-8,'Three Rockets stacks grant sixty percent bullet speed');
+activateLithe();check(abilityState.dashTime===1&&abilityState.dashCooldown===0&&abilityState.swivelTime===2.5,'Shift starts one-second dash and independent two-and-half-second shield');
+check(Math.abs(playerMovementSpeed()-135*1.3*2.5)<1e-8,'Lithe multiplies upgraded movement speed by two and a half');check(Math.abs(playerBulletSpeed()-380*1.6*1.2)<1e-8,'Executor boosts shots fired during dash');
+fire('click');const upgradedBullet=shells[0],firedSpeed=Math.hypot(upgradedBullet.vx,upgradedBullet.vy);check(upgradedBullet.playerRocketStacks===3&&!upgradedBullet.rocket&&upgradedBullet.maxBounces===1,'Player Rockets adds scalable flame while retaining ordinary bullet ricochet');
+let frontShot=bullet(400,350,-380,0,enemies[0]),backShot=bullet(50,350,380,0,enemies[0]);let sideHit=firstContact(frontShot,-300,0);check(sideHit?.shield===tank&&sideHit.partial,'Turret-facing half shield intercepts front shot');bounce(frontShot,sideHit);check(frontShot.life===0,'Swivel Shield absorbs front shot');check(!firstContact(backShot,120,0),'Uncovered rear half does not intercept bullets');
+tank.turret=Math.PI;sideHit=firstContact(backShot,120,0);check(sideHit?.partial,'Swivel Shield follows turret rotation');tank.turret=0;
+const beforeRearDamage=playerHearts;hitTank(backShot,tank);check(playerHearts===beforeRearDamage-1,'Rear hits still damage through Swivel Shield');hitGrace=0;frontShot=bullet(160,350,-380,0,enemies[0]);hitTank(frontShot,tank);check(playerHearts===beforeRearDamage-1,'Front-facing damage is blocked by Swivel Shield');
+updatePlayerAbilities(1);check(abilityState.dashTime===0&&abilityState.dashCooldown===6&&abilityState.swivelTime===1.5,'Dash cooldown begins after speed burst ends and shield remains');check(Math.abs(playerBulletSpeed()-380*1.6)<1e-8&&Math.hypot(upgradedBullet.vx,upgradedBullet.vy)===firedSpeed,'Executor applies at firing time without slowing existing bullets later');
+activateLithe();check(abilityState.dashTime===0,'Lithe cannot activate during cooldown');updatePlayerAbilities(1.5);check(tank.swivelTime===0,'Swivel Shield expires after two and a half seconds');updatePlayerAbilities(4.5);activateLithe();check(abilityState.dashTime===1,'Lithe becomes ready after six-second cooldown');
+check(document.getElementById('ability-hud').innerHTML.includes('SHIFT'),'Ability HUD shows Shift control and dash progress');
+window.TankGame.loadLevel(Levels.defaultLevel);check(playerMovementSpeed()===135&&playerBulletSpeed()===380&&!tank.swivelTime,'Quick Play clears Lethe effects');
+
+window.TankGame.loadLevel(Levels.defaultLevel,{testLoadout:true,hearts:2,maxHearts:4,upgrades:{defy:1,blessing:1,lithe:1,forged:2}});active=true;countdown=0;check(playerHearts===2&&playerUpgrades.blessing&&playerMovementSpeed()===135*1.2,'Quick Play test loadout applies selected upgrades and hearts');check(!document.getElementById('game-header').hidden&&!document.getElementById('combat-hearts').hidden,'Test mode retains navigation header and health HUD');hitTank({life:1},tank);check(playerHearts===1,'Test loadout uses selected health');document.getElementById('reset').onclick();check(playerHearts===2&&playerUpgrades.blessing&&abilityState.shieldCooldown===0,'Test restart restores chosen starting health and ready upgrades');window.TankGame.loadLevel(Levels.defaultLevel);check(!playerUpgrades.blessing&&campaignCombat===null,'Regular Quick Play clears test loadout');
+let mineEnemy=abilitySetup({typhon:1});dropMine();check(mines.length===1&&mineCooldown===3&&Math.abs(mineRadius*2-63*.8)<1e-8,'Typhon drops a tank-sized circular mine with three-second cooldown');dropMine();check(mines.length===1,'Active-mine cap blocks placement');updateMines(3);dropMine();check(mines.length===1,'Cap still blocks after cooldown');
+mineEnemy.x=250;updateMines(.01);check(mines[0].fuse===1,'Nearby enemy starts one-second fuse');mineEnemy.x=600;updateMines(.99);check(mines.length===1,'Triggered mine waits full fuse even if enemy leaves');updateMines(.01);check(!mines.length&&playerHearts===2,'Mine explodes after one second and damages its owner');dropMine();check(mines.length===1,'Mine can be replaced after explosion and expired placement cooldown');
+mineEnemy=abilitySetup({typhon:1,protector:1,fires:1});dropMine();tank.x=260;updateMines(1.5);dropMine();check(mines.length===2&&mineCooldown===1.5,'Fires permits two mines with half cooldown');mineEnemy.x=350;detonateMine(mines[0]);check(!mines.length&&!mineEnemy.alive&&playerHearts===3,'Chain reaction kills enemies and Protector prevents owner damage');check(mineBlasts.length===2,'Chain renders both fiery blasts');
+mineEnemy=abilitySetup({typhon:1});dropMine();mineEnemy.x=280;walls.push({x:200,y:200,width:50,height:300,type:'solid'});updateMines(.1);check(mines[0].fuse===null,'Walls block proximity triggering');detonateMine(mines[0]);check(mineEnemy.alive,'Walls block blast damage');
+mineEnemy=abilitySetup({typhon:1,protector:1});dropMine();shells=[bullet(150,350,240,0,mineEnemy)];update(.001);check(!mines.length&&!shells.length&&playerHearts===3,'A bullet detonates a mine and is canceled');
+mineEnemy=abilitySetup({typhon:1});countdown=1;dropMine();check(!mines.length,'Countdown prevents mine placement');countdown=0;active=false;dropMine();check(!mines.length,'Paused game prevents mine placement');active=true;dropMine();restart();check(!mines.length&&mineCooldown===0,'Battlefield restart clears mines and refreshes placement cooldown');
+mineEnemy=abilitySetup({forgiveness:1},{hearts:1});mineEnemy.x=330;hitTank({life:1},tank);check(!mineEnemy.alive&&tank.alive&&playerHearts===1&&campaignCombat.hearts===1,'Fatal blast clears final tank and revives player at one heart');check(mineBlasts[0].radius===225,'Forgiveness radius is 1.5 times mine blast');hitGrace=0;mineEnemy.alive=true;hitTank({life:1},tank);check(tank.alive&&!mineEnemy.alive&&playerHearts===1,'Forgiveness works again on another fatal hit');
+mineEnemy=abilitySetup({forgiveness:1},{hearts:1});mineEnemy.x=600;hitTank({life:1},tank);check(!tank.alive&&playerHearts===0&&mineEnemy.alive,'Forgiveness cannot revive while enemies survive');
+mineEnemy=abilitySetup({forgiveness:1},{hearts:1});mineEnemy.x=330;mineEnemy.shieldTime=3;hitTank({life:1},tank);check(!tank.alive&&mineEnemy.alive,'Invincible enemies survive fatal explosion and prevent revival');
+mineEnemy=abilitySetup({forgiveness:1,typhon:1},{hearts:1});dropMine();tank.x=350;mineEnemy.x=220;hitTank({life:1},tank);check(!mines.length&&tank.alive&&!mineEnemy.alive,'Fatal blast triggers nearby mines without recursive self-death');
+
+const mineSounds=[];window.TankMineAudio={play(kind){mineSounds.push(kind);}};
+mineEnemy=abilitySetup({typhon:1,protector:1});dropMine();check(mineSounds.at(-1)==='place','Placing a mine plays mechanical sound');mineEnemy.x=250;updateMines(.01);check(mineSounds.at(-1)==='fuse','Triggering proximity fuse plays warning');updateMines(.25);check(mineSounds.filter(s=>s==='fuse').length===2,'Fuse repeats warning as it counts down');detonateMine(mines[0]);check(mineSounds.at(-1)==='explode'&&mineBlasts[0].blue,'Protector mine uses blue explosion and dedicated blast sound');
+mineEnemy=abilitySetup({typhon:1});dropMine();detonateMine(mines[0]);check(!mineBlasts[0].blue,'Ordinary mine keeps red-orange flames');
+let flameCurves=0,blastClips=0;const fireColors=[];
+for(const method of ['save','restore','beginPath','closePath','moveTo','lineTo','fill','fillRect','stroke','translate','rotate'])ctx[method]=()=>{};
+ctx.clip=()=>blastClips++;ctx.bezierCurveTo=()=>flameCurves++;ctx.quadraticCurveTo=()=>flameCurves++;ctx.createRadialGradient=()=>({addColorStop(position,color){fireColors.push(color);}});
+mineBlasts[0].age=.2;drawMineBlasts();check(flameCurves>50&&blastClips===1&&fireColors.some(c=>c.includes('255,118,25')),'Fire has curling animated tongues clipped by cover');
+mineBlasts[0].blue=true;drawMineBlasts();check(fireColors.some(c=>c.includes('50,160,255')),'Protector fire uses blue and cyan palette');
+
+abilitySetup({});groundMarks=[];tank.x=170;stampTracks(tank,150,tank.y);check(groundMarks[0].life===25,'Treads fade five times slower');updateEffects(5);check(groundMarks.some(m=>m.type==='treads'&&m.age===5),'Treads remain after former five-second lifetime');
+groundMarks=[];const scuffShot=bullet(300,300,380,0);bounce(scuffShot,{nx:-1,ny:0});check(groundMarks.length===0,'Wall ricochets leave no ground mark');
+let sketchStrokes=0;ctx.stroke=()=>sketchStrokes++;tank.alive=false;drawTank(tank,false);check(sketchStrokes===14&&ctx.strokeStyle.includes('65,90,111'),'Player grave uses muted layered sketch strokes');enemies[0].alive=false;drawTank(enemies[0],true);check(sketchStrokes===28&&ctx.strokeStyle.includes('120,76,61'),'Enemy grave uses muted rust sketch strokes');
 console.log(passed+' gameplay checks passed');
 `;
 vm.runInNewContext(source.replace(/\}\)\(\);\s*$/, tests + '\n})();'), context);
