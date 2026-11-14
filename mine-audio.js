@@ -17,6 +17,7 @@
         gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(volume,now+.004);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
         oscillator.connect(gain);gain.connect(context.destination);oscillator.start(now);oscillator.stop(now+duration+.01);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
       };
+      if(kind==='dryFire'){tone(270,90,.035,.07,'triangle');tone(1800,550,.014,.018,'triangle');return;}
       if(kind==='mud'){
         if(now-lastMud<.14)return;lastMud=now;
         const duration=.18,buffer=context.createBuffer(1,Math.ceil(context.sampleRate*duration),context.sampleRate),samples=buffer.getChannelData(0);

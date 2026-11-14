@@ -20,12 +20,6 @@
       "type": "grey"
     },
     {
-      "column": 9,
-      "row": 3,
-      "facing": "north",
-      "type": "grey"
-    },
-    {
       "column": 10,
       "row": 1,
       "facing": "north",
@@ -42,6 +36,18 @@
       "row": 5,
       "facing": "north",
       "type": "purple"
+    },
+    {
+      "column": 10,
+      "row": 3,
+      "facing": "north",
+      "type": "purple"
+    },
+    {
+      "column": 8,
+      "row": 3,
+      "facing": "north",
+      "type": "grey"
     }
   ],
   "walls": [

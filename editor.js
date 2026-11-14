@@ -264,7 +264,7 @@
     };
     const x = (spawn.column + .5) * cellSize, y = (spawn.row + .5) * cellSize;
     const a = Levels.directions[spawn.facing];
-    ctx.save();ctx.translate(x,y);ctx.scale(previewScale,previewScale);
+    ctx.save();ctx.translate(x,y);const size=ai?(Levels.aiTypes[spawn.type].size||1):1;ctx.scale(previewScale*size,previewScale*size);
     Levels.paintTank(ctx,palette,{hull:a,turret:a,tread:0,type:ai?spawn.type:'player'});
     ctx.restore();
   }

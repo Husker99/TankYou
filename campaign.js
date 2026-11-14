@@ -2,6 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id), Levels = window.TankLevels;
   const storageKey = 'tank-you-campaign-v1';
+  const difficulties={novice:{label:'Novice',hearts:3,tier:0},beginner:{label:'Beginner',hearts:2,tier:0},standard:{label:'Standard',hearts:2,tier:1},expert:{label:'Expert',hearts:1,tier:1}};
   const classes = ['stygian','lethe','phleg','ache'];
   const labels = { combat:'Combat', heart:'+1 Heart', refill:'Refill All Hearts', stygian:'Armor', lethe:'Mobility', phleg:'Armaments', ache:'Gunnery', boss:'Boss' };
   const counts = [2,2,3,2,4,3,2,1,2,3,2,4,3,2,1];
@@ -44,7 +45,7 @@
       const nodes=customMap?window.TankMaps.compile(customMap,data.seed):graph(data.seed,data.generatedRows||8,data.layoutVersion!==3),byId=id=>id==='boss'?{id:'boss',row:Math.max(...nodes.map(n=>n.row))+1,type:'boss',next:[]}:nodes.find(n=>n.id===id),initial=nodes.filter(n=>n.row===0).map(n=>n.id);
       const nextFrom=id=>window.TankEncounters&&id!=='boss'&&byId(id)?.row===Math.max(...nodes.map(n=>n.row))?['boss']:byId(id)?.next||[];let current='start';
       for(const id of data.visited){if(!(current==='start'?initial:nextFrom(current)).includes(id))return;current=id;}
-      if(data.current!==current||!classes.every(c=>Number.isInteger(data.rewards?.[c])&&data.rewards[c]>=0&&data.rewards[c]<=30))return;
+      if(data.current!==current||!classes.every(c=>Number.isInteger(data.rewards?.[c])&&data.rewards[c]>=0&&data.rewards[c]<=90))return;
       if(data.pending&&(!(current==='start'?initial:nextFrom(current)).includes(data.pending)||!['combat','boss'].includes(byId(data.pending)?.type)))return;
       if(data.status==='active'&&data.hearts===0)return;
       if(data.status==='complete'&&current!=='boss'&&byId(current)?.row!==Math.max(...nodes.map(n=>n.row)))return;
@@ -54,12 +55,15 @@
       }
       const maxHearts=data.maxHearts??3;
       if(!Number.isInteger(maxHearts)||maxHearts<1||maxHearts>1000)return;
-      run={...data,nodes,customMap,upgrades:window.TankUpgrades?.normalize(data.upgrades)||{},maxHearts,hearts:Math.min(data.hearts,maxHearts)};
+      if(data.difficulty&&!difficulties[data.difficulty]&&data.difficulty!=='legacy')return;
+      run={...data,difficulty:data.difficulty||'legacy',nodes,customMap,upgrades:window.TankUpgrades?.normalize(data.upgrades)||{},maxHearts,hearts:Math.min(data.hearts,maxHearts)};
     } catch { /* An unusable local save leaves a fresh run available. */ }
   }
-  function newRun(seed = Math.floor(Math.random()*4294967296),customMap = run?.customMap || window.TankMaps?.defaultMap || null) {
+  function newRun(seed = Math.floor(Math.random()*4294967296),customMap = run?.customMap || window.TankMaps?.defaultMap || null,difficulty='beginner') {
     if(customMap)customMap=window.TankMaps.validate(customMap);
-    run={version:1,seed,customMap,layoutVersion:3,generatedRows:15,nodes:customMap?window.TankMaps.compile(customMap,seed):graph(seed),current:'start',visited:[],hearts:2,maxHearts:3,upgrades:{},abilityState:{},pendingUpgrade:null,rewards:Object.fromEntries(classes.map(c=>[c,0])),pending:null,pendingEncounter:null,lastEncounter:null,mapNumber:customMap?.mapNumber||1,status:'active',message:'Choose a blue-outlined encounter to begin your advance.'};
+    const setting=difficulties[difficulty]||difficulties.beginner;
+    $('campaign-difficulty').hidden=true;
+    run={difficulty:difficulties[difficulty]?difficulty:'beginner',version:1,seed,customMap,layoutVersion:3,generatedRows:15,nodes:customMap?window.TankMaps.compile(customMap,seed):graph(seed),current:'start',visited:[],hearts:setting.hearts,maxHearts:setting.hearts,upgrades:{},abilityState:{},pendingUpgrade:null,rewards:Object.fromEntries(classes.map(c=>[c,0])),pending:null,pendingEncounter:null,lastEncounter:null,mapNumber:customMap?.mapNumber||1,status:'active',message:'Choose a blue-outlined encounter to begin your advance.'};
     fighting=false;save();show();
   }
   function icon(type) {
@@ -78,11 +82,11 @@
   }
   function show() {
     if(!run){newRun();return;}
-    fighting=false;if(run.pendingUpgrade&&window.TankUpgrades){showUpgrades();return;}$('campaign-bank-notice').hidden=true;$('campaign-new-confirm').hidden=true;hooks.onMap?.();render();
+    $('campaign-difficulty').hidden=true;fighting=false;if(run.pendingUpgrade&&window.TankUpgrades){showUpgrades();return;}$('campaign-bank-notice').hidden=true;$('campaign-new-confirm').hidden=true;hooks.onMap?.();render();
   }
   function completeNode(n,message) {
     run.current=n.id;run.visited.push(n.id);run.pending=null;run.pendingEncounter=null;run.message=message;
-    if(n.id==='boss'||(!window.TankEncounters&&n.row===lastRow())){run.status='complete';run.message='Map 1 cleared. Your tank made it through the first campaign map.';}
+    if(n.id==='boss'||(!window.TankEncounters&&n.row===lastRow())){run.status='complete';run.message=`Map ${run.mapNumber||1} cleared.`;}
     save();render();
   }
   function choose(id) {
@@ -91,7 +95,8 @@
     if(n.type==='combat'||n.type==='boss'){
       let level=Levels.builtInLevels[n.levelId];
       if(window.TankEncounters){
-        const bank=n.type==='boss'?`${run.mapNumber||1}boss`:window.TankEncounters.bankFor(run.mapNumber||run.customMap?.mapNumber||1,n.row,lastRow()+1);
+        const standardIntroduction=run.difficulty==='standard'&&(run.mapNumber||1)===1&&n.type==='combat'&&!run.visited.some(id=>['combat','boss'].includes(node(id)?.type));
+        const bank=standardIntroduction?'1a':n.type==='boss'?`${run.mapNumber||1}boss`:window.TankEncounters.bankFor(run.mapNumber||run.customMap?.mapNumber||1,n.row,lastRow()+1,difficulties[run.difficulty]?.tier||0);
         const encounter=run.pending===id&&run.pendingEncounter?window.TankEncounters.get(run.pendingEncounter):window.TankEncounters.pick(bank,run.lastEncounter);
         if(!encounter){$('campaign-bank-notice').hidden=false;$('campaign-bank-notice').textContent=`No encounters have been uploaded to bank ${bank} yet.`;return;}
         level=encounter.level;run.pendingEncounter=encounter.id;run.lastEncounter=encounter.id;
@@ -103,7 +108,8 @@
       run.hearts=run.maxHearts;completeNode(n,'All hearts refilled.');
     } else if(n.type==='heart'){
       const full=run.hearts>=run.maxHearts;
-      run.hearts=Math.min(run.maxHearts,run.hearts+1);completeNode(n,full?'Hearts are already full. Choose your next encounter.':'Gained 1 heart. Choose your next encounter.');
+      if(full)run.maxHearts=Math.min(1000,run.maxHearts+1);else run.hearts=Math.min(run.maxHearts,run.hearts+1);
+      completeNode(n,full?'Gained an empty heart slot.':'Restored 1 heart.');
     } else if(['stygian','lethe','phleg','ache'].includes(n.type)&&window.TankUpgrades){
       run.pendingUpgrade=run.pendingUpgrade||{nodeId:n.id,offers:window.TankUpgrades.offers(run.upgrades||{},n.type)};save();showUpgrades();
     } else {
@@ -133,6 +139,17 @@
     const n=node(pending.nodeId);run.pendingUpgrade=null;run.rewards[n.type]++;completeNode(n,'Upgrade acquired.');show();
   }
   $('upgrade-menu-back').onclick=()=>hooks.onMenu?.();
+  function nextCampaignMap(){
+    const number=(run?.mapNumber||1)+1;
+    return Object.values(window.TankMaps?.builtInMaps||{}).find(map=>map.mapNumber===number)||null;
+  }
+  function continueCampaign(){
+    if(!run||run.status!=='complete')return;
+    const map=nextCampaignMap();if(!map)return;
+    const customMap=window.TankMaps.validate(map);
+    Object.assign(run,{customMap,mapNumber:customMap.mapNumber,nodes:window.TankMaps.compile(customMap,run.seed),current:'start',visited:[],status:'active',message:'',pending:null,pendingEncounter:null,pendingUpgrade:null,lastEncounter:null,abilityState:{}});
+    fighting=false;save();show();
+  }
   function finishCombat(won) {
     if(!fighting||!run.pending)return;
     fighting=false;
@@ -166,13 +183,23 @@
     const scroll=$('campaign-scroll');const target=options.length?node(options[0]):node(run.current);
     if(typeof board.offsetHeight==='number')scroll.scrollTop=target?target.y/900*board.offsetHeight-scroll.clientHeight*.65:scroll.scrollHeight;
     const summary=$('campaign-summary');summary.hidden=run.status==='active';
-    if(!summary.hidden){summary.innerHTML=run.status==='complete'?'<h3>Map 1 cleared!</h3><p>Maps 2 and 3 are coming later. The full campaign is not complete yet.</p>':'<h3>Run ended</h3><p>Start a new run to chart another course.</p>';}
+    if(!summary.hidden){
+      summary.innerHTML=run.status==='complete'?`<h3>Map ${run.mapNumber||1} cleared!</h3>`:'<h3>Run ended</h3><p>Start a new run to chart another course.</p>';
+      if(run.status==='complete'&&nextCampaignMap()){const button=document.createElement('button');button.textContent=`Continue to Map ${nextCampaignMap().mapNumber}`;button.onclick=continueCampaign;summary.appendChild(button);}
+    }
   }
   $('campaign-legend').innerHTML=['combat','boss','heart','refill','stygian','lethe','phleg','ache'].map(type=>{const label=labels[type];return `<div class="campaign-legend-row" style="color:${type==='boss'?'#000':type==='combat'?'#303a2d':['heart','refill'].includes(type)?'#be3f2c':'#237bb5'}">${icon(type)}<span>${label}</span></div>`;}).join('');
   $('campaign-back').onclick=()=>{fighting=false;save();hooks.onMenu?.();};
   $('campaign-home-logo').onclick=()=>$('campaign-back').onclick();
-  $('campaign-new').onclick=()=>{if(run?.status==='active')$('campaign-new-confirm').hidden=false;else newRun();};
-  $('campaign-new-yes').onclick=()=>newRun();$('campaign-new-no').onclick=()=>{$('campaign-new-confirm').hidden=true;};
+  function startDifficulty(id){if(!difficulties[id])return;newRun(undefined,window.TankMaps?.defaultMap||null,id);}
+  function showDifficulty(){
+    fighting=false;hooks.onMap?.();$('campaign-difficulty').hidden=false;
+    const choices=$('difficulty-choices');choices.replaceChildren();
+    for(const [id,setting]of Object.entries(difficulties)){const button=document.createElement('button');button.type='button';button.innerHTML=`<strong>${setting.label}</strong><span>${setting.hearts} full heart container${setting.hearts===1?'':'s'} · ${setting.tier?'Harder encounters':'Original encounters'}</span>`;button.onclick=()=>startDifficulty(id);choices.appendChild(button);}
+  }
+  $('difficulty-back').onclick=()=>{$('campaign-difficulty').hidden=true;hooks.onMenu?.();};
+  $('campaign-new').onclick=()=>{if(run?.status==='active')$('campaign-new-confirm').hidden=false;else showDifficulty();};
+  $('campaign-new-yes').onclick=()=>showDifficulty();$('campaign-new-no').onclick=()=>{$('campaign-new-confirm').hidden=true;};
   function toggleLegend(collapsed) {
     $('campaign-sidebar').hidden=collapsed;
     $('campaign-show-legend').hidden=!collapsed;
@@ -182,5 +209,5 @@
   $('campaign-hide-legend').onclick=()=>toggleLegend(true);
   $('campaign-show-legend').onclick=()=>toggleLegend(false);
   restore();
-  window.TankCampaign={configure(value){hooks=value;},takeUpgrade,open:show,openDefault(){const map=window.TankMaps?.defaultMap;if(map&&JSON.stringify(run?.customMap)!==JSON.stringify(map))newRun(Math.floor(Math.random()*4294967296),map);else show();},newRun,startMap(map){newRun(Math.floor(Math.random()*4294967296),map);},icon,choose,finishCombat,suspend(){fighting=false;save();},inCombat:()=>fighting,getState:()=>run?JSON.parse(JSON.stringify(run)):null};
+  window.TankCampaign={configure(value){hooks=value;},startDifficulty,showDifficulty,takeUpgrade,continueCampaign,open:show,openDefault(){const map=window.TankMaps?.defaultMap;const builtInRun=run&&Object.values(window.TankMaps?.builtInMaps||{}).some(m=>JSON.stringify(m)===JSON.stringify(run.customMap));if(map&&!builtInRun&&JSON.stringify(run?.customMap)!==JSON.stringify(map))showDifficulty();else if(!run)showDifficulty();else show();},newRun,startMap(map){newRun(Math.floor(Math.random()*4294967296),map);},icon,choose,finishCombat,suspend(){fighting=false;save();},inCombat:()=>fighting,getState:()=>run?JSON.parse(JSON.stringify(run)):null};
 })();

@@ -1,6 +1,7 @@
 {
   "version": 1,
   "name": "Level 1b2",
+  "zoom": 100,
   "grid": {
     "columns": 12,
     "rows": 9,
@@ -13,35 +14,35 @@
   },
   "enemies": [
     {
-      "column": 2,
-      "row": 1,
-      "facing": "north",
-      "type": "teal"
-    },
-    {
-      "column": 6,
-      "row": 1,
-      "facing": "north",
-      "type": "teal"
-    },
-    {
-      "column": 6,
+      "column": 5,
       "row": 7,
       "facing": "north",
       "type": "teal"
     },
     {
-      "column": 2,
+      "column": 5,
+      "row": 1,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 8,
       "row": 7,
       "facing": "north",
       "type": "teal"
     },
     {
-      "column": 9,
-      "row": 4,
+      "column": 8,
+      "row": 1,
       "facing": "north",
       "type": "teal"
     }
   ],
-  "walls": []
+  "walls": [
+    {
+      "column": 9,
+      "row": 4,
+      "type": "rocketSentry"
+    }
+  ]
 }

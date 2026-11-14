@@ -1,6 +1,7 @@
 {
   "version": 1,
   "name": "Level 1b4",
+  "zoom": 100,
   "grid": {
     "columns": 12,
     "rows": 9,
@@ -87,7 +88,7 @@
     {
       "column": 11,
       "row": 1,
-      "type": "solid"
+      "type": "sentry"
     },
     {
       "column": 11,
@@ -222,7 +223,7 @@
     {
       "column": 0,
       "row": 6,
-      "type": "solid"
+      "type": "sentry"
     },
     {
       "column": 2,

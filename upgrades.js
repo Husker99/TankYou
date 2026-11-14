@@ -4,15 +4,15 @@
     smart:{name:'Smart Bullets',category:'ache',description:'E readies a tracking shot that survives one bullet collision. Cannot ricochet. Short cooldown.'},
     tracking:{name:'Upgraded Tracking',category:'ache',requires:'smart',repeatable:true,limit:2,description:'Double Smart Bullet maneuverability. Stacks up to 2 times.'},
     heavy:{name:'Heavy Ammo',category:'ache',description:'Bullets become 50% wider and 20% longer.'},
-    reload:{name:'Reload Faster',category:'ache',repeatable:true,limit:3,description:'Reduce firing delay by 30%. Stacks up to 3 times.'},
-    ammo:{name:'Extra Ammo',category:'ache',description:'Have up to 7 bullets active at once.'},
+    reload:{name:'Reload Faster',category:'ache',repeatable:true,limit:3,description:'Reduce reload time by 30%. Stacks up to 3 times.'},
+    ammo:{name:'Extra Ammo',category:'ache',description:'Increase your magazine from 5 rounds to 7.'},
     typhon:{name:'Projectile Mines',category:'phleg',description:'Space places a mine. After arming, it launches at nearby enemies and explodes. One mine at a time. Short cooldown.'},
     demolitions:{name:'Elite Demolitions',category:'phleg',requires:'typhon',description:'Mines arm in 0.5 seconds. Carry up to 3 active mines.'},
     protector:{name:'Protector Mines',category:'phleg',requires:'typhon',description:'Your mines can no longer hurt you.'},
     fires:{name:'Mine Capacity',category:'phleg',requires:'typhon',description:'Place up to two mines at once, with half the cooldown.'},
     forgiveness:{name:"Afterlife",category:'phleg',description:'Explode when you die. If the blast clears the room, revive with 1 heart.'},
-    blessing:{name:"Shield",description:'Q grants a brief shield that absorbs bullets and blocks all damage. Long cooldown.'},
-    favored:{name:"Deflect Shield",requires:'blessing',description:'Your shield lasts longer and reflects bullets.'},
+    blessing:{name:"Shield",description:'Q grants a 1.85-second shield that breaks after absorbing one bullet. Long cooldown.'},
+    favored:{name:"Deflect Shield",requires:'blessing',description:'Your shield reflects bullets instead of absorbing them.'},
     hero:{name:"Offensive Shield",requires:'blessing',description:'Double your shield’s area. Enemies touching it take damage.'},
     defy:{name:'Empty Heart Slot',repeatable:true,description:'Gain an empty heart slot. Repeatable.'},
     stun:{name:'Stun',description:'Q readies a stunning energy wave for your next shot. Short cooldown.'},
@@ -21,7 +21,9 @@
     lithe:{name:'Dash',category:'lethe',description:'Shift gives a brief burst of speed. Short cooldown.'},
     swivel:{name:'Swivel Shield',category:'lethe',requires:'lithe',description:'Dashing briefly shields the side you’re aiming toward, absorbing incoming bullets.'},
     executor:{name:'Bullet Speed',category:'lethe',requires:'lithe',description:'Bullets fired while dashing travel 20% faster.'},
-    grasp:{name:"Upgraded Stun",requires:'stun',description:'Your stun lasts much longer.'}
+    grasp:{name:"Upgraded Stun",requires:'stun',description:'Your stun lasts much longer.'},
+    endurance:{name:'Endurance Shield',requires:'blessing',description:'Your shield lasts up to 3.3 seconds.'},
+    sustain:{name:'Sustain Shield',requires:'blessing',description:'Your shield lasts its full duration, regardless of bullet hits.'}
   };
   function normalize(value={}){return Object.fromEntries(Object.keys(definitions).map(id=>[id,Number.isInteger(value?.[id])&&value[id]>0?(definitions[id].repeatable?Math.min(definitions[id].limit||997,value[id]):1):0]));}
   function offers(owned,category='stygian'){
