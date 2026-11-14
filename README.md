@@ -383,3 +383,205 @@ Ground mark refinement: tread marks fade over 25 seconds (five times slower).
 Wall ricochets retain brief sparks but leave no ground scuffs. Death Xs use
 position-stable, broken sketch strokes in subdued rust or slate-blue, with no
 background or glow, and remain below living tanks and scenery.
+
+Main menu now uses the Field Dispatch direction: locally bundled Barlow Condensed
+typography, warm paper, rust/olive accents, and decorative field-map tank artwork.
+Visible home text is limited to Tank You. and the three mode names; the sound
+control remains an icon. Submenus retain their functional labels and navigation.
+
+## Typhon launch behavior
+
+Proximity retains the one-second fuse; its completion launches the mine toward
+the nearest living enemy's position at that instant. It never homes or re-aims.
+The launched mine accelerates from rest over 0.3 seconds to 1.5 times Teal rocket
+speed (952.2 world units/second). It flies at most three squares (300 units),
+detonating earlier at its locked destination, on tank/shield contact, or against
+cover/arena boundaries. Holes do not block it. Swept movement prevents tunneling.
+Bullets cancel and launch grounded mines immediately; blasts chain-launch them.
+Flying mines struck by a bullet or blast detonate. With no living enemies, a
+triggered mine explodes in place. Flying mines occupy their slot until detonation.
+The 1.5-square blast, placement limits/cooldowns, friendly damage and Protector
+blue-fire behavior remain. A ground pulse, locked-point reticle, propulsion flame
+and smoke accompany distinct targeting, launch, flight and impact sounds.
+
+Mines now require three seconds after placement to arm. A tiny three-segment
+indicator fills once per second, then a two-tone ready sound plays once. Inactive
+mines cannot launch from proximity, bullets or chain blasts; bullets pass through
+them. Once armed, the separate one-second proximity fuse works as before. Arming
+pauses with gameplay. Placement limits and cooldowns are unchanged. Mine artwork
+now has beveled metal armor, panel seams, screws, vent slots, and a recessed
+central emitter. Armed mines use a stronger expanding pulse halo and brighter core.
+
+Mine arming now takes 2.1 seconds, with three red indicator lamps arranged in
+a triangle on the mine casing. They illuminate at 0.7, 1.4, and 2.1 seconds.
+These lamps stay red for Protector mines as well; their pulse and blast stay blue.
+Gameplay/editor headers, campaign logo, credits logo, and interface typography
+now use the Field Dispatch Barlow Condensed family and Tank You. wordmark.
+
+## Per-level zoom
+
+The Level Editor has a 60–100% Zoom slider (5% steps). Its default is 100%,
+including existing levels without a zoom field. The value is saved as `zoom`
+in the level JSON, survives local save/import/export, supports undo/redo,
+and applies to editor previews and gameplay. The gameplay camera stays centered,
+with a visible arena boundary when zoomed out. Pointer aiming and editor placement
+map through the reduced view. Grid coordinates, walls, collisions, movement
+speeds, and weapon ranges are unchanged. Grid dimensions remain a separate control.
+
+## Gold and Grey tanks
+
+The Level Editor offers Gold (Elite) and Grey (Armored); both keep the common
+AI tread colors and fit the standard collision footprint. Gold has shiny gold
+armor and glint highlights. Its dodge planner runs every 0.04 seconds, forecasts
+1.1 seconds of nearby shell motion including ricochets from every owner, and
+scores sixteen movement directions plus stopping against all predicted threats.
+It uses no random dodge chance or dodge cooldown. Paths still obey cover, holes,
+tank collisions, and movement speed, so unavoidable hits remain possible.
+
+Gold can aim a real counter-projectile at an incoming bullet predicted to hit it,
+including allied/returning shells. Intercepts account for projectile travel,
+turret turn time, cover and friendly-fire safety. It has five active standard
+240-unit/s shells with one ricochet, firing every 0.22 seconds offensively or
+0.11 seconds for interception. Existing opening delay rules still apply.
+
+Grey inherits Black burst weapons, bank shots and dodging. Each ten-second
+window schedules one random 2.5-second charge, pursuing at normal speed and
+firing through the charge instead of taking cover. It requires three damage
+hits, with additional cracks/scuffing at two and one remaining armor. Bullets,
+blasts and contact hits have no grace period; continuous fire damage alone
+gets 0.35 seconds of grace. Room restarts reset armor and special AI state.
+
+Grey aggression update: charges last 3.5 seconds, randomly scheduled to fit
+within each ten-second window. Grey keeps moving during bursts and ordinary
+rest pauses, prefers a closer 220-unit engagement distance, replans more often,
+and no longer retreats into cover between charges. Movement speed and armor
+remain unchanged. Burst reload is 1.8 seconds, ten percent shorter than before.
+
+AI spacing: mobile tanks mildly prefer about one hull-width of open ground
+between allies. Route destinations are penalized for crowding, and ordinary
+movement can steer up to a small angle away from nearby allies when it improves
+space. The bias never teleports or pushes tanks, never changes their speed,
+and falls back to the original route in blocked/narrow passages or unsafe bullet
+lanes. Dodge safety has priority; equal-safety dodges prefer less crowded space.
+Stationary tanks remain stationary, but mobile tanks give them room. Dead tanks
+and the player do not contribute to ally spacing.
+
+Player shield timing update: Styx's Blessing lasts 2.5 seconds, Favored lasts
+4 seconds, and Swivel Shield lasts 2.1 seconds. Cooldowns are unchanged.
+
+Gold charge/aim update: Gold shares Grey's 3.5-second charge once in every
+ten-second window, with a random start in the first 6.5 seconds. It pursues at
+normal speed, prioritizing the charge over evasive movement while continuing
+to shoot and intercept. Outside charges it retains predictive dodging.
+Each offensive shot independently chooses leading or direct aiming with a
+50% chance, held stable until that shot fires. Leading solves projectile arrival
+time using current player velocity and muzzle offset, respects arena/cover stops,
+and includes both legs' travel for bank shots. Defensive interception is separate
+and does not consume the pending offensive aim choice.
+
+Gold charge movement correction: frequent route replanning no longer sends Gold
+back to the center of its current grid cell mid-route. During a charge it pursues
+the player directly along a clear path, stopping short of tank contact; blocked
+approaches retain their cover-navigation waypoints until reaching the next cell.
+Charge duration, speed, firing, and lead-shot probability are unchanged.
+
+Gold charge priority: active charges suppress evasive movement, ignore soft
+ally-spacing and preferred firing-distance scores, and prioritize closing the
+distance around obstacles. Physical collisions still apply. Defensive interception
+can continue while moving; outside the charge, normal Gold dodging resumes.
+
+## Player death presentation
+
+Fatal player hits freeze AI, bullets and mines immediately. A visible hull-edge
+impact spark precedes the tank explosion by 0.1 seconds; the result screen is
+withheld until 0.3 seconds after the hit. The slower player explosion lasts
+0.95 seconds and can finish behind the result overlay. Remaining bullets and
+mines stay visible on both won and lost battlefields. The impacting bullet
+is still consumed. Resetting/loading a room clears all presentation state.
+Collision hitboxes and damage rules are unchanged; nonfatal campaign hits also
+show contact sparks. Olympus revival still resolves normally before defeat.
+
+Tank destruction now uses the selected Heavy Thump sound (original procedural
+audio). Surviving armor/health hits retain their separate impact sound. Player
+death still plays one explosion sound at the delayed visual explosion.
+
+Flamethrower tanks now have orange armor and are labeled Orange (Flamethrower).
+The saved type ID remains `pink` for compatibility with existing levels.
+Behavior, flame emblem, weapons and shared AI tread colors are unchanged.
+
+Map 2a is bundled as maps/map-2a.json and appears in the Map Editor's built-in
+map library. Its campaign assignment is Map 2, so it draws from 2a/2b and 2boss
+encounter banks. Main-menu Roguelike still starts Map 1a; multi-map progression
+is not enabled yet. Missing later encounter banks retain their existing notice.
+
+## Pink duplicator tanks
+
+Pink (Duplicator), saved as `duplicator`, is separate from Orange Flamethrower
+(the legacy `pink` ID). It inherits Black's movement, dodge, burst weapon and
+bank shots, with pink armor and a twin-square turret emblem. Each original and
+its descendants share a cap of twelve living tanks, including the original.
+Each tank gets one random duplication point per seven-second active-time window.
+New copies can duplicate after their own initial materialization.
+
+Duplication finds nearby hull-clear space without crossing walls or holes,
+reserves it with a vulnerable solidifying copy, and briefly pauses parent/copy
+movement and firing for a 0.45-second shimmer. If blocked or capped, one pending
+duplication retries every quarter second, without accumulating extra spawns.
+Stun and pause prevent duplication. Dead family members free slots; copies
+survive their original's death. Loading/restarting clears all runtime copies.
+
+Pink duplication windows now last 8.5 seconds instead of 7, including new copies.
+Random activation points, animation, spawn checks and twelve-tank cap are unchanged.
+
+Pink duplication warmup: original tanks cannot duplicate during the first three
+seconds of active combat (the pre-fight countdown does not count). Every new
+copy also waits through its first three seconds of lifetime, including its
+materialization animation. Earlier random triggers remain pending until the
+lockout ends. The 8.5-second windows and twelve-living-tank family limit remain.
+
+Bullet contact refinement: longitudinal collision length is now 90% of artwork,
+centered to exclude 5% of art at the nose and rear for tank damage. Width and
+art are unchanged. Pair and wall padding retain their existing multipliers
+relative to this shorter length; AI hit prediction uses the same shorter base.
+
+Bullet artwork and contact rectangles are now 5% wider across their short axis.
+The shortened 90%-length damage rectangle and end insets remain unchanged.
+
+## Violet, Purple, and Navy specialists
+
+Violet (Disruptor) fires slow, violet energy pulses every 3.4 seconds. Exposed
+hits cause no heart damage, but jam Q, Shift, and mine placement for two seconds,
+ending active dash/partial shield/readied stun. Ordinary movement and shooting
+remain available. Shields protect against the pulse. A brief battlefield status
+shows the disruption. Friendly hits can jam AI abilities too, subject to usual
+pre-fire ally safety checks.
+
+Purple (Mortar) has three HP, armor wear, and slower movement. It lobs one shell
+at a time over walls/holes within 7.5 squares, with a 1.2-second marked landing
+area and a one-square-radius explosion. It holds fire if the landing blast
+would threaten a predicted ally position. It has a 4.5-second reload and cannot
+fire at point-blank range. In-flight mortars remain after their owner dies and
+freeze with other ordnance at round end.
+
+Navy (Sniper) moves slowly, warns with a clear barrel flash during a 0.85-second
+windup, then fires one fast 1000-unit/s shell without ricochets. Its reload is
+3.6 seconds. It needs a clear safe firing line. All three are editor-selectable
+and retain common AI treads, existing collisions, and import/export support.
+
+Violet wave update: Violet now emits a purple version of the player's expanding
+Q wave rather than a projectile capsule. It uses the same six-square cone,
+rocket-speed propagation, front thickness and wall clipping. Holes do not
+block it. Hits keep the existing two-second ability jam without health damage;
+player shields still protect against the effect. The wide firing cone checks
+allies before launch and enemy waves do not consume player shot capacity.
+
+Mortar timing refinement: flight takes 1.5 seconds (80% former travel speed).
+The landing indicator is a dark shadow expanding to the damage radius by
+1.3 seconds, then holding for the final 0.2 seconds. Damage area is 90% of its
+previous area (radius 100 × sqrt(0.9)); ally safety uses the updated flight time
+and damage radius.
+
+Violet jamming waves now travel at 60% of player Q-wave speed (380.88 units/s).
+The player's Q wave, jamming duration and wave range remain unchanged.
+
+Ability jamming now lasts four seconds per hit.

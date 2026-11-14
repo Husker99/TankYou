@@ -13,12 +13,6 @@
   },
   "enemies": [
     {
-      "column": 2,
-      "row": 1,
-      "facing": "north",
-      "type": "pink"
-    },
-    {
       "column": 10,
       "row": 1,
       "facing": "north",
@@ -39,6 +33,24 @@
     {
       "column": 7,
       "row": 6,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 1,
+      "row": 1,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 3,
+      "row": 1,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 7,
+      "row": 1,
       "facing": "north",
       "type": "red"
     }

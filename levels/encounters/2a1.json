@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "name": "2a1",
+  "zoom": 90,
+  "grid": {
+    "columns": 15,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 4,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 10,
+      "row": 2,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 9,
+      "row": 5,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 13,
+      "row": 4,
+      "facing": "north",
+      "type": "pink"
+    },
+    {
+      "column": 1,
+      "row": 7,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 1,
+      "row": 0,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 3,
+      "row": 0,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 3,
+      "row": 7,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 13,
+      "row": 6,
+      "facing": "north",
+      "type": "pink"
+    }
+  ],
+  "walls": [
+    {
+      "column": 4,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 6,
+      "type": "solid"
+    }
+  ]
+}

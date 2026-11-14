@@ -1,0 +1,384 @@
+{
+  "version": 1,
+  "name": "2b4",
+  "zoom": 95,
+  "grid": {
+    "columns": 13,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 9,
+      "row": 7,
+      "facing": "north",
+      "type": "grey"
+    },
+    {
+      "column": 9,
+      "row": 3,
+      "facing": "north",
+      "type": "grey"
+    },
+    {
+      "column": 10,
+      "row": 1,
+      "facing": "north",
+      "type": "grey"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "facing": "north",
+      "type": "violet"
+    },
+    {
+      "column": 10,
+      "row": 5,
+      "facing": "north",
+      "type": "purple"
+    }
+  ],
+  "walls": [
+    {
+      "column": 2,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 6,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 6,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 7,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 7,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 7,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 6,
+      "type": "hole"
+    },
+    {
+      "column": 5,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 7,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 6,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 6,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 7,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 7,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 8,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 7,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 6,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "hole"
+    },
+    {
+      "column": 5,
+      "row": 2,
+      "type": "hole"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "type": "hole"
+    },
+    {
+      "column": 7,
+      "row": 0,
+      "type": "hole"
+    },
+    {
+      "column": 7,
+      "row": 7,
+      "type": "hole"
+    },
+    {
+      "column": 8,
+      "row": 8,
+      "type": "hole"
+    },
+    {
+      "column": 12,
+      "row": 8,
+      "type": "sentry"
+    },
+    {
+      "column": 12,
+      "row": 0,
+      "type": "sentry"
+    }
+  ]
+}

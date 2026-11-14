@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "name": "2b2",
+  "zoom": 95,
+  "grid": {
+    "columns": 13,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 4,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 9,
+      "row": 4,
+      "facing": "north",
+      "type": "gold"
+    },
+    {
+      "column": 11,
+      "row": 6,
+      "facing": "north",
+      "type": "gold"
+    },
+    {
+      "column": 11,
+      "row": 2,
+      "facing": "north",
+      "type": "gold"
+    }
+  ],
+  "walls": [
+    {
+      "column": 0,
+      "row": 0,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 1,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 2,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 3,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 4,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 5,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 6,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 8,
+      "type": "sentry"
+    }
+  ]
+}

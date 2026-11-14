@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "name": "2a6",
+  "zoom": 100,
+  "grid": {
+    "columns": 15,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 7,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 11,
+      "row": 7,
+      "facing": "north",
+      "type": "navy"
+    },
+    {
+      "column": 8,
+      "row": 3,
+      "facing": "north",
+      "type": "navy"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "facing": "north",
+      "type": "navy"
+    },
+    {
+      "column": 13,
+      "row": 2,
+      "facing": "north",
+      "type": "navy"
+    },
+    {
+      "column": 7,
+      "row": 7,
+      "facing": "north",
+      "type": "navy"
+    }
+  ],
+  "walls": [
+    {
+      "column": 6,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 2,
+      "type": "solid"
+    }
+  ]
+}

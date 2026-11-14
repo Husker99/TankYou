@@ -3,7 +3,7 @@
   const $ = id => document.getElementById(id), Levels = window.TankLevels;
   const storageKey = 'tank-you-campaign-v1';
   const classes = ['stygian','lethe','phleg','ache'];
-  const labels = { combat:'Combat', heart:'+1 Heart', refill:'Refill All Hearts', stygian:'Styx', lethe:'Lethe', phleg:'Phleg', ache:'Ache', boss:'Boss' };
+  const labels = { combat:'Combat', heart:'+1 Heart', refill:'Refill All Hearts', stygian:'Armor', lethe:'Mobility', phleg:'Armaments', ache:'Gunnery', boss:'Boss' };
   const counts = [2,2,3,2,4,3,2,1,2,3,2,4,3,2,1];
   const links = [ [[0],[1]], [[0,1,2],[2]], [[0],[0],[1]], [[0,1,2],[3]], [[0],[1],[1],[2]], [[0],[0,1],[1]], [[0],[0]], [[0,1]], [[0,1],[1,2]], [[0],[0,1],[1]], [[0,1],[2,3]], [[0],[0,1],[1,2],[2]], [[0],[0,1],[1]], [[0],[0]] ];
   let run = null, hooks = {}, fighting = false, storageFailed = false;
@@ -50,7 +50,7 @@
       if(data.status==='complete'&&current!=='boss'&&byId(current)?.row!==Math.max(...nodes.map(n=>n.row)))return;
       if(data.pendingUpgrade){
         const pending=data.pendingUpgrade,U=window.TankUpgrades;
-        if(!U||!['stygian','lethe','phleg'].includes(byId(pending.nodeId)?.type)||!(current==='start'?initial:nextFrom(current)).includes(pending.nodeId)||!Array.isArray(pending.offers)||pending.offers.length>2||pending.offers.some(id=>!U.definitions[id]))return;
+        if(!U||!['stygian','lethe','phleg','ache'].includes(byId(pending.nodeId)?.type)||!(current==='start'?initial:nextFrom(current)).includes(pending.nodeId)||!Array.isArray(pending.offers)||pending.offers.length>2||pending.offers.some(id=>!U.definitions[id]))return;
       }
       const maxHearts=data.maxHearts??3;
       if(!Number.isInteger(maxHearts)||maxHearts<1||maxHearts>1000)return;
@@ -104,7 +104,7 @@
     } else if(n.type==='heart'){
       const full=run.hearts>=run.maxHearts;
       run.hearts=Math.min(run.maxHearts,run.hearts+1);completeNode(n,full?'Hearts are already full. Choose your next encounter.':'Gained 1 heart. Choose your next encounter.');
-    } else if(['stygian','lethe','phleg'].includes(n.type)&&window.TankUpgrades){
+    } else if(['stygian','lethe','phleg','ache'].includes(n.type)&&window.TankUpgrades){
       run.pendingUpgrade=run.pendingUpgrade||{nodeId:n.id,offers:window.TankUpgrades.offers(run.upgrades||{},n.type)};save();showUpgrades();
     } else {
       run.rewards[n.type]++;completeNode(n,`${labels[n.type]} requisition collected. Upgrade effects are coming later.`);
@@ -112,7 +112,7 @@
   }
   function showUpgrades(){
     const U=window.TankUpgrades,pending=run.pendingUpgrade;
-    if(!pending||!node(pending.nodeId)||!['stygian','lethe','phleg'].includes(node(pending.nodeId).type))return;
+    if(!pending||!node(pending.nodeId)||!['stygian','lethe','phleg','ache'].includes(node(pending.nodeId).type))return;
     hooks.onUpgrade?.();$('upgrade-title').textContent=labels[node(pending.nodeId).type];$('upgrade-choices').replaceChildren();
     if(!pending.offers.length){const button=document.createElement('button');button.textContent='All upgrades acquired — Continue';button.onclick=()=>{const n=node(pending.nodeId);run.pendingUpgrade=null;run.rewards[n.type]++;completeNode(n,'');show();};$('upgrade-choices').appendChild(button);}
     for(const id of pending.offers){
@@ -141,12 +141,12 @@
   }
   function render() {
     $('campaign-progress').textContent=`Map ${run.mapNumber||run.customMap?.mapNumber||1} / 3`;
-    $('campaign-title').textContent=run.customMap?.name||'Campaign Map';
+    $('campaign-view').setAttribute('aria-label',run.customMap?.name||'Campaign Map');
     const options=available(),visited=new Set(run.visited),board=$('campaign-board');
     board.style.height=`${Math.max(650,(lastRow()+1)*84)*2}px`;
     Levels.renderHearts($('campaign-hearts'),run.hearts,run.maxHearts);
     $('campaign-message').textContent=(run.pending&&run.status==='active'?'An encounter is in progress. Select its blue node to resume combat.':run.message)+(storageFailed?' Progress could not be saved in this browser.':'');
-    $('campaign-rewards').innerHTML=classes.map(c=>`<div class="campaign-reward">${icon(c)}<span>${c==='stygian'?'Styx':labels[c]} × ${run.rewards[c]}</span></div>`).join('');
+    $('campaign-rewards').innerHTML=classes.map(c=>`<div class="campaign-reward">${icon(c)}<span>${c==='stygian'?'Armor':labels[c]} × ${run.rewards[c]}</span></div>`).join('');
     if(window.TankUpgrades){const list=$('campaign-upgrades');list.replaceChildren();for(const [id,count]of Object.entries(run.upgrades||{}))if(count&&window.TankUpgrades.definitions[id]){const item=document.createElement('div');item.textContent=window.TankUpgrades.definitions[id].name+(count>1?` × ${count}`:'');list.appendChild(item);}}
     let lines='';
     const mapX=x=>450+(x-450)*.5;
@@ -170,6 +170,7 @@
   }
   $('campaign-legend').innerHTML=['combat','boss','heart','refill','stygian','lethe','phleg','ache'].map(type=>{const label=labels[type];return `<div class="campaign-legend-row" style="color:${type==='boss'?'#000':type==='combat'?'#303a2d':['heart','refill'].includes(type)?'#be3f2c':'#237bb5'}">${icon(type)}<span>${label}</span></div>`;}).join('');
   $('campaign-back').onclick=()=>{fighting=false;save();hooks.onMenu?.();};
+  $('campaign-home-logo').onclick=()=>$('campaign-back').onclick();
   $('campaign-new').onclick=()=>{if(run?.status==='active')$('campaign-new-confirm').hidden=false;else newRun();};
   $('campaign-new-yes').onclick=()=>newRun();$('campaign-new-no').onclick=()=>{$('campaign-new-confirm').hidden=true;};
   function toggleLegend(collapsed) {

@@ -13,7 +13,7 @@
       $('test-row-'+id).classList?.toggle('unavailable',input.disabled);
     }
   }
-  for(const category of ['stygian','lethe','phleg']){
+  for(const category of ['stygian','lethe','phleg','ache']){
     const container=$('test-loadout-'+category);
     for(const [id,def]of Object.entries(U.definitions))if((def.category||'stygian')===category){
       const row=document.createElement('label');row.id='test-row-'+id;row.className='test-upgrade-row';row.title=def.description;

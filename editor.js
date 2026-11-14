@@ -46,13 +46,26 @@
     $('redo-edit').disabled = !redo.length;
     canvas.width = draft.grid.columns * cellSize; canvas.height = draft.grid.rows * cellSize;
     canvas.style.aspectRatio = `${draft.grid.columns} / ${draft.grid.rows}`;
-    canvas.style.width = `min(88%, ${draft.grid.columns * 8.5 * .88}%)`;
+    $('level-zoom').value=draft.zoom??100;
+    previewZoom(draft.zoom??100);
     $('grid-columns').value = draft.grid.columns; $('grid-rows').value = draft.grid.rows;
     $('crop-option').hidden = true; $('crop-grid').checked = false; pendingCrop = '';
     selected.column = Math.min(selected.column, draft.grid.columns - 1);
     selected.row = Math.min(selected.row, draft.grid.rows - 1);
     draw();
   }
+  function previewZoom(percent){
+    const zoom=percent/100;
+    $('level-zoom-value').textContent=percent+'%';
+    canvas.style.width=`min(${88*zoom}%, ${draft.grid.columns*8.5*.88*zoom}%)`;
+  }
+  $('level-zoom').oninput=()=>{const value=Number($('level-zoom').value);if(Number.isFinite(value)&&value>=60&&value<=100)previewZoom(value);};
+  $('level-zoom').onchange=()=>{
+    endStroke();const value=Number($('level-zoom').value);
+    if(!Number.isFinite(value)||value<60||value>100){sync();return;}
+    if(value===(draft.zoom??100))return;
+    const before=Levels.clone(draft);draft.zoom=value;remember(before);
+  };
   function remember(before) {
     undo.push(before); if (undo.length > 60) undo.shift(); redo = []; persist(); sync();
   }
@@ -89,14 +102,14 @@
       draft.enemies = draft.enemies.filter(e => !same(e, cell));
       draft.walls = draft.walls.filter(w => !same(w, cell));
     } else if (tool === 'scenery') {
-      if (player || ai) { message('Erase or move the tank before placing scenery here.', true); return false; }
       const type = $('scenery-type').value || 'solid';
+      if ((player || ai)&&type!=='mud') { message('Erase or move the tank before placing scenery here.', true); return false; }
       if (wall) wall.type = type; else draft.walls.push({ ...cell, type });
     } else if (tool === 'player') {
-      if (wall || ai) { message('Choose an empty cell for the player start.', true); return false; }
+      if ((wall&&wall.type!=='mud') || ai) { message('Choose an empty cell for the player start.', true); return false; }
       draft.player = { ...cell, facing: 'north' };
     } else if (tool === 'ai') {
-      if (wall || player) { message('Choose an empty cell for the AI tank.', true); return false; }
+      if ((wall&&wall.type!=='mud') || player) { message('Choose an empty cell for the AI tank.', true); return false; }
       if (!ai && draft.enemies.length >= 20) { message('This room supports up to 20 AI tanks.', true); return false; }
       const value = { ...cell, type: $('ai-type').value, facing: 'north' };
       if (ai) Object.assign(ai, value); else draft.enemies.push(value);
@@ -267,7 +280,8 @@
     if (!isOpen) return;
     const width = canvas.width, height = canvas.height;
     ctx.clearRect(0, 0, width, height); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height);
-    for (const w of draft.walls) { if (w.type === 'hole') { previewHole(w); continue; } ctx.fillStyle = '#c8c7bc'; ctx.fillRect(w.column * cellSize, w.row * cellSize, cellSize, cellSize); ctx.fillStyle = '#e4e2d8'; ctx.fillRect(w.column * cellSize, w.row * cellSize, cellSize, 5); }
+    Levels.paintMud(ctx,draft.walls.filter(w=>w.type==='mud'),cellSize,{columns:draft.grid.columns,rows:draft.grid.rows,walls:draft.walls});
+    for (const w of draft.walls) { if(w.type==='mud')continue; if (w.type === 'hole') { previewHole(w); continue; } ctx.fillStyle = '#c8c7bc'; ctx.fillRect(w.column * cellSize, w.row * cellSize, cellSize, cellSize); ctx.fillStyle = '#e4e2d8'; ctx.fillRect(w.column * cellSize, w.row * cellSize, cellSize, 5); if(['sentry','rocketSentry'].includes(w.type)){ctx.save();ctx.translate((w.column+.5)*cellSize,(w.row+.5)*cellSize);ctx.scale(cellSize/100,cellSize/100);Levels.paintSentry(ctx,w.type==='rocketSentry');ctx.restore();} }
     ctx.strokeStyle = '#d5d9cf'; ctx.lineWidth = 1;
     ctx.beginPath(); for (let x = 0; x <= width; x += cellSize) { ctx.moveTo(x, 0); ctx.lineTo(x, height); } for (let y = 0; y <= height; y += cellSize) { ctx.moveTo(0, y); ctx.lineTo(width, y); } ctx.stroke();
     if (draft.player) previewTank(draft.player, false);
