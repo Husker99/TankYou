@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "name": "2b3",
+  "zoom": 95,
+  "grid": {
+    "columns": 13,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 3,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 4,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 4,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 3,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 7,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 8,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 9,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 9,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 8,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 7,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 10,
+      "row": 4,
+      "facing": "north",
+      "type": "duplicator"
+    }
+  ],
+  "walls": [
+    {
+      "column": 2,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 10,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "type": "sentry"
+    },
+    {
+      "column": 10,
+      "row": 1,
+      "type": "sentry"
+    },
+    {
+      "column": 6,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "type": "sentry"
+    }
+  ]
+}

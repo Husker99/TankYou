@@ -1,0 +1,8 @@
+Engine-loop heavy vehicle/tank
+Authors: Nayckron; collaborator: qubodup
+Source: https://opengameart.org/content/engine-loop-heavy-vehicletank
+Original file: engine_heavy_loop_1.ogg
+License selected: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+License: https://creativecommons.org/licenses/by/3.0/
+Legal code: https://creativecommons.org/licenses/by/3.0/legalcode
+Audio file unchanged. Renamed engine-heavy-loop.ogg for this game; playback volume fades in and out with movement.

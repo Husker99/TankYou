@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "name": "Level 11",
+  "grid": {
+    "columns": 13,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 5,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 8,
+      "row": 7,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 11,
+      "row": 4,
+      "facing": "north",
+      "type": "elite"
+    }
+  ],
+  "walls": [
+    {
+      "column": 2,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "type": "hole"
+    },
+    {
+      "column": 0,
+      "row": 3,
+      "type": "hole"
+    }
+  ]
+}

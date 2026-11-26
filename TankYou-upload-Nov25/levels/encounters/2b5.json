@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "name": "2b5",
+  "zoom": 95,
+  "grid": {
+    "columns": 19,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 6,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 16,
+      "row": 7,
+      "facing": "north",
+      "type": "sentry"
+    }
+  ],
+  "walls": [
+    {
+      "column": 14,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 13,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 13,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 14,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 14,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 15,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 15,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 15,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 14,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 14,
+      "row": 4,
+      "type": "sentry"
+    },
+    {
+      "column": 18,
+      "row": 1,
+      "type": "sentry"
+    },
+    {
+      "column": 18,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 17,
+      "row": 0,
+      "type": "sentry"
+    },
+    {
+      "column": 13,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 3,
+      "type": "sentry"
+    },
+    {
+      "column": 8,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 1,
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 12,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 1,
+      "type": "sentry"
+    },
+    {
+      "column": 0,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 0,
+      "type": "solid"
+    },
+    {
+      "column": 0,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 6,
+      "type": "sentry"
+    },
+    {
+      "column": 10,
+      "row": 8,
+      "type": "sentry"
+    },
+    {
+      "column": 12,
+      "row": 0,
+      "type": "sentry"
+    },
+    {
+      "column": 18,
+      "row": 8,
+      "type": "sentry"
+    }
+  ]
+}
