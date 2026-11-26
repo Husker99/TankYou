@@ -1,0 +1,4 @@
+Rocket launch: Kenney Sci-Fi Sounds, laserSmall_003.ogg (rocket-launch-soft.ogg).
+Rocket flight: Kenney Sci-Fi Sounds, spaceEngineLow_002.ogg (rocket-flight-soft.ogg).
+Audio files unchanged; launch plays at lower pitch/volume, flight loops quietly with a capped shared volume.
+License: CC0. See LICENSE-sci-fi.txt.

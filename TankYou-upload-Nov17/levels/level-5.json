@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "name": "Level 5",
+  "grid": {
+    "columns": 12,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 4,
+    "row": 3,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 10,
+      "row": 4,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 10,
+      "row": 2,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 9,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 7,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 5,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 3,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 1,
+      "row": 6,
+      "facing": "north",
+      "type": "sentry"
+    },
+    {
+      "column": 8,
+      "row": 1,
+      "facing": "north",
+      "type": "sentry"
+    }
+  ],
+  "walls": []
+}

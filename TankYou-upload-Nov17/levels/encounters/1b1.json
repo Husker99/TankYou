@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "name": "Level 1b1",
+  "grid": {
+    "columns": 12,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 7,
+      "row": 1,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 7,
+      "row": 6,
+      "facing": "north",
+      "type": "red"
+    },
+    {
+      "column": 9,
+      "row": 3,
+      "facing": "north",
+      "type": "teal"
+    },
+    {
+      "column": 9,
+      "row": 4,
+      "facing": "north",
+      "type": "teal"
+    }
+  ],
+  "walls": [
+    {
+      "column": 4,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 5,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 4,
+      "type": "solid"
+    }
+  ]
+}

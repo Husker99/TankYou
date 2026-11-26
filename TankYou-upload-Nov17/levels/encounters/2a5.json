@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "name": "2a5",
+  "zoom": 95,
+  "grid": {
+    "columns": 15,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 7,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 13,
+      "row": 8,
+      "facing": "north",
+      "type": "navy"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "facing": "north",
+      "type": "grey"
+    },
+    {
+      "column": 5,
+      "row": 3,
+      "facing": "north",
+      "type": "purple"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "purple"
+    },
+    {
+      "column": 11,
+      "row": 6,
+      "facing": "north",
+      "type": "purple"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "facing": "north",
+      "type": "navy"
+    },
+    {
+      "column": 7,
+      "row": 7,
+      "facing": "north",
+      "type": "violet"
+    },
+    {
+      "column": 5,
+      "row": 7,
+      "facing": "north",
+      "type": "purple"
+    }
+  ],
+  "walls": [
+    {
+      "column": 3,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 9,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 2,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 4,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 7,
+      "type": "hole"
+    },
+    {
+      "column": 3,
+      "row": 8,
+      "type": "hole"
+    },
+    {
+      "column": 6,
+      "row": 1,
+      "type": "hole"
+    },
+    {
+      "column": 6,
+      "row": 0,
+      "type": "hole"
+    },
+    {
+      "column": 9,
+      "row": 7,
+      "type": "hole"
+    },
+    {
+      "column": 9,
+      "row": 8,
+      "type": "hole"
+    },
+    {
+      "column": 12,
+      "row": 1,
+      "type": "hole"
+    },
+    {
+      "column": 12,
+      "row": 0,
+      "type": "hole"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "name": "2a4",
+  "zoom": 95,
+  "grid": {
+    "columns": 15,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 8,
+      "row": 6,
+      "facing": "north",
+      "type": "duplicator"
+    },
+    {
+      "column": 8,
+      "row": 1,
+      "facing": "north",
+      "type": "duplicator"
+    },
+    {
+      "column": 12,
+      "row": 1,
+      "facing": "north",
+      "type": "duplicator"
+    },
+    {
+      "column": 12,
+      "row": 6,
+      "facing": "north",
+      "type": "duplicator"
+    },
+    {
+      "column": 9,
+      "row": 4,
+      "facing": "north",
+      "type": "brown"
+    }
+  ],
+  "walls": [
+    {
+      "column": 7,
+      "row": 1,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 1,
+      "type": "solid"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "name": "2b1",
+  "zoom": 100,
+  "grid": {
+    "columns": 15,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 1,
+    "row": 7,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 11,
+      "row": 4,
+      "facing": "north",
+      "type": "gold"
+    },
+    {
+      "column": 10,
+      "row": 6,
+      "facing": "north",
+      "type": "purple"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "purple"
+    }
+  ],
+  "walls": [
+    {
+      "column": 7,
+      "row": 6,
+      "type": "sentry"
+    },
+    {
+      "column": 7,
+      "row": 5,
+      "type": "sentry"
+    },
+    {
+      "column": 7,
+      "row": 4,
+      "type": "rocketSentry"
+    },
+    {
+      "column": 7,
+      "row": 3,
+      "type": "sentry"
+    },
+    {
+      "column": 7,
+      "row": 2,
+      "type": "sentry"
+    },
+    {
+      "column": 2,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 2,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 4,
+      "type": "sentry"
+    }
+  ]
+}

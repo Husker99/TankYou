@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "name": "Level 1a1",
+  "grid": {
+    "columns": 13,
+    "rows": 8,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 5,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 6,
+      "row": 1,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 11,
+      "row": 4,
+      "facing": "north",
+      "type": "elite"
+    },
+    {
+      "column": 9,
+      "row": 2,
+      "facing": "north",
+      "type": "brown"
+    }
+  ],
+  "walls": [
+    {
+      "column": 2,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 3,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 3,
+      "type": "solid"
+    },
+    {
+      "column": 6,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 7,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 8,
+      "row": 5,
+      "type": "solid"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "type": "hole"
+    },
+    {
+      "column": 0,
+      "row": 3,
+      "type": "hole"
+    }
+  ]
+}

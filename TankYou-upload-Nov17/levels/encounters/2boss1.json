@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "name": "2boss1",
+  "zoom": 95,
+  "grid": {
+    "columns": 13,
+    "rows": 9,
+    "cellSize": 100
+  },
+  "player": {
+    "column": 2,
+    "row": 4,
+    "facing": "north"
+  },
+  "enemies": [
+    {
+      "column": 10,
+      "row": 4,
+      "facing": "north",
+      "type": "fortress"
+    },
+    {
+      "column": 10,
+      "row": 2,
+      "facing": "north",
+      "type": "violet"
+    },
+    {
+      "column": 8,
+      "row": 1,
+      "facing": "north",
+      "type": "brown"
+    }
+  ],
+  "walls": [
+    {
+      "column": 4,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 8,
+      "row": 8,
+      "type": "sentry"
+    },
+    {
+      "column": 9,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 10,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 7,
+      "type": "solid"
+    },
+    {
+      "column": 11,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 8,
+      "type": "solid"
+    },
+    {
+      "column": 4,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 1,
+      "type": "mud"
+    },
+    {
+      "column": 5,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 6,
+      "row": 0,
+      "type": "mud"
+    },
+    {
+      "column": 4,
+      "row": 2,
+      "type": "mud"
+    },
+    {
+      "column": 3,
+      "row": 3,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 6,
+      "type": "mud"
+    },
+    {
+      "column": 0,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 2,
+      "row": 4,
+      "type": "mud"
+    },
+    {
+      "column": 1,
+      "row": 5,
+      "type": "mud"
+    },
+    {
+      "column": 9,
+      "row": 7,
+      "type": "sentry"
+    },
+    {
+      "column": 10,
+      "row": 6,
+      "type": "sentry"
+    },
+    {
+      "column": 11,
+      "row": 6,
+      "type": "solid"
+    },
+    {
+      "column": 12,
+      "row": 6,
+      "type": "solid"
+    }
+  ]
+}

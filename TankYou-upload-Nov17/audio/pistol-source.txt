@@ -1,0 +1,4 @@
+Source: The Free Firearm Sound Library, Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney.
+https://opengameart.org/node/21826
+License: CC0 (public domain dedication).
+Recording: Ruger Mark III/R_35P.wav; first shot extracted, converted to mono 44.1 kHz, high frequencies softened, normalized, tail faded to 240 ms.
