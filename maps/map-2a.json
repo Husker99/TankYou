@@ -7,23 +7,14 @@
   "columns": 3,
   "nodes": [
     {
-      "id": "0-0",
-      "row": 0,
-      "column": 0,
-      "type": "combat",
-      "levelId": "random",
-      "next": [
-        "1-0"
-      ]
-    },
-    {
       "id": "0-1",
       "row": 0,
       "column": 1,
-      "type": "heart",
+      "type": "command",
       "levelId": "random",
       "next": [
-        "1-1"
+        "1-1",
+        "1-0"
       ]
     },
     {

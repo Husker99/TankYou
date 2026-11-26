@@ -38,12 +38,6 @@
       "type": "red"
     },
     {
-      "column": 1,
-      "row": 0,
-      "facing": "north",
-      "type": "red"
-    },
-    {
       "column": 3,
       "row": 0,
       "facing": "north",
@@ -54,12 +48,6 @@
       "row": 7,
       "facing": "north",
       "type": "red"
-    },
-    {
-      "column": 13,
-      "row": 6,
-      "facing": "north",
-      "type": "pink"
     }
   ],
   "walls": [
@@ -146,11 +134,6 @@
     {
       "column": 12,
       "row": 4,
-      "type": "solid"
-    },
-    {
-      "column": 12,
-      "row": 6,
       "type": "solid"
     }
   ]

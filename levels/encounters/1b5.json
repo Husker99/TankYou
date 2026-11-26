@@ -1,6 +1,7 @@
 {
   "version": 1,
   "name": "Level 1b5",
+  "zoom": 95,
   "grid": {
     "columns": 9,
     "rows": 8,

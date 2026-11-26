@@ -32,7 +32,9 @@
   let mud=[],groundCanvas=null,groundMarks=[],muzzleFlashes=[];
   let mines=[], mineBlasts=[], mineCooldown=0, mineClock=0;
   const mineRadius=63*.8/2, mineArmDuration=2.1;
-  let magazineRounds=5,magazineProgress=0,dryFireCooldown=0;
+  let damageFlashTime=0;
+  let nextVolleyId=0,battleRhythmKills=0;
+  let magazineRounds=5,magazineProgress=0,magazineReloadStreak=0,dryFireCooldown=0;
   let playerUpgrades={}, abilityState={}, waves=[], abilitySaveKey='', abilityHudKey='';
   let countdown = 0;
   let campaignCombat = null, playerHearts = 1, hitGrace = 0;
@@ -96,9 +98,10 @@
   function restart() {
     const loaded = Levels.compile(currentLevel);
     document.getElementById('game-header').hidden=!!campaignCombat&&!campaignCombat.testLoadout;
-    playerUpgrades=campaignCombat?.upgrades||{};magazineRounds=playerAmmoLimit();magazineProgress=0;dryFireCooldown=0;
+    playerUpgrades=campaignCombat?.upgrades||{};battleRhythmKills=campaignCombat?.testLoadout?0:campaignCombat?.battleRhythmKills||0;magazineRounds=playerAmmoLimit();magazineProgress=0;magazineReloadStreak=0;dryFireCooldown=0;
     abilityState={queuedShield:false,queuedDash:false,queuedMine:false,queuedStun:false,disruptTime:0,shieldTime:0,shieldCooldown:0,stunCooldown:0,stunArmed:false,smartArmed:false,smartCooldown:0,dashTime:0,dashCooldown:0,swivelTime:0};
-    mortars=[];deathSequence=null;hitImpacts=[];tank.hitFlash=0;
+    damageFlashTime=0;document.getElementById('damage-flash').style.opacity=0;
+    nextVolleyId=0;mortars=[];deathSequence=null;hitImpacts=[];tank.hitFlash=0;
     groundCanvas=null;groundMarks=[];muzzleFlashes=[];tank.trackDistance=0;
     mines=[];mineBlasts=[];mineCooldown=0;mineClock=0;
     waves=[];abilitySaveKey='';abilityHudKey='';
@@ -113,7 +116,7 @@
     canvas.width = world.width; canvas.height = world.height;
     canvas.style.aspectRatio = `${world.width} / ${world.height}`;
     walls.splice(0, walls.length, ...loaded.walls);mud=loaded.mud||[];
-    Object.assign(tank, loaded.player, { damageScale:.92,shieldTime:abilityState.shieldTime,swivelTime:0,shieldRadius:48*(playerUpgrades.hero?Math.SQRT2:1),turnClearance: null, recoil:0, vx: 0, vy: 0 });
+    Object.assign(tank, loaded.player, { damageScale:.92,shieldTime:abilityState.shieldTime,swivelTime:0,shieldRadius:48,turnClearance: null, recoil:0, vx: 0, vy: 0 });
     Object.assign(enemy, loaded.enemies[0]);
     enemies = [enemy, ...loaded.enemies.slice(1).map(e => ({ ...e }))];
     let nextDupFamily=0;
@@ -368,6 +371,7 @@
     if (dy > 0) consider({ t: (world.height - ey - s.y) / dy, nx: 0, ny: -1 });
     for (const w of walls) if (w.type !== 'hole'&&!(mountWall(s.owner,w)&&s.x>=w.x-ex&&s.x<=w.x+w.width+ex&&s.y>=w.y-ey&&s.y<=w.y+w.height+ey)) consider(segmentBox(s.x, s.y, dx, dy, { x: w.x - ex, y: w.y - ey, width: w.width + ex * 2, height: w.height + ey * 2 }));
     for (const e of [tank,...enemies]) if (e.alive && (e.shieldTime > 0 || (e===tank&&e.swivelTime>0))) {
+      if(e===tank&&playerEvading())continue;
       const hit = shieldContact(s, dx, dy, e);
       if (hit) consider(hit);
     }
@@ -485,15 +489,16 @@
     const plan=e.bankPlan&&traceBankShot(e,e.bankPlan.angle,target);
     return plan?{...plan,target}:null;
   }
-  function emitShot(owner, speed, angle = owner.turret) {
+  function emitShot(owner, speed, angle = owner.turret, options = {}) {
     const a = angle;owner.recoil=.11;
     const weapon = owner === tank ? null : Levels.aiTypes[owner.type];
     const s = { x: owner.x, y: owner.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
-      owner, bounces: 0, maxBounces: weapon?.maxBounces ?? 1, sniper:!!weapon?.sniper, disruptor:!!weapon?.disruptor, rocket: !!weapon?.rocket, life: 8, smokeDistance: 0 };
+      owner,volleyId:options.volleyId,bounces: 0, maxBounces: weapon?.maxBounces ?? 1, sniper:!!weapon?.sniper, disruptor:!!weapon?.disruptor, rocket: !!weapon?.rocket, life: 8, smokeDistance: 0 };
     if(owner===tank){
       s.lengthScale=playerUpgrades.heavy?1.2:1;s.widthScale=playerUpgrades.heavy?1.5:1;
-      if(abilityState.smartArmed){s.smart=true;s.bulletShield=1;s.maxBounces=0;s.smartDistance=0;s.trackingScale=2**(playerUpgrades.tracking||0);s.smartTarget=smartTarget(s);abilityState.smartArmed=false;abilityState.smartCooldown=3;publishAbilities(true);}
+      if(options.smartShot??abilityState.smartArmed){s.smart=true;s.bulletShield=1;s.maxBounces=0;s.smartDistance=0;s.trackingScale=2**(playerUpgrades.tracking||0);s.smartTarget=smartTarget(s);abilityState.smartArmed=false;abilityState.smartCooldown=3;publishAbilities(true);}
     }
+    s.x-=Math.sin(a)*(options.sideOffset||0);s.y+=Math.cos(a)*(options.sideOffset||0);
     // Keep the enlarged hitbox clear of its firing tank at every turret angle.
     const hullExtent = Math.abs(Math.cos(a - owner.hull)) * 21 * scale + Math.abs(Math.sin(a - owner.hull)) * 20 * scale;
     const muzzleDistance = Math.max(owner.muzzleDistance||(owner.mounted?84:51), hullExtent + bulletHitHalfLength*shellLengthScale(s) + .5);
@@ -502,15 +507,20 @@
     s.x += dx * (contact ? contact.t : 1); s.y += dy * (contact ? contact.t : 1);
     if (contact) bounce(s, contact);
     if(owner===tank)s.playerRocketStacks=playerUpgrades.rockets||0;
-    muzzleFlashes.push({x:owner.x+dx,y:owner.y+dy,angle:a,age:0,sniper:s.sniper});
-    shells.push(s);if(s.sniper)mineSound('sniper');else if(s.disruptor)mineSound('disrupt');else sound(s.rocket ? 'rocketLaunch' : 'shoot');
+    muzzleFlashes.push({x:owner.x+dx-Math.sin(a)*(options.sideOffset||0),y:owner.y+dy+Math.cos(a)*(options.sideOffset||0),angle:a,age:0,sniper:s.sniper});
+    shells.push(s);if(options.silent)return;if(s.sniper)mineSound('sniper');else if(s.disruptor)mineSound('disrupt');else sound(s.rocket ? 'rocketLaunch' : 'shoot');
   }
   function fire(trigger = 'held') {
     if(countdown>0||editing||!active||phase!=='playing'||!tank.alive)return;
     if(magazineRounds<=0){if(dryFireCooldown<=0){mineSound('dryFire');dryFireCooldown=.15;}return;}
     if(trigger==='click'?clickCooldown>0:cooldown>0)return;
-    magazineRounds--;updateAmmoHud();
-    if(abilityState.stunArmed){tank.recoil=.11;waves.push({owner:tank,hostile:false,x:tank.x,y:tank.y,angle:tank.turret,distance:0,life:1,hits:new Set()});abilityState.stunArmed=false;sound('rocketLaunch');publishAbilities(true);}else emitShot(tank, playerBulletSpeed()); cooldown = .22*playerReloadScale(); clickCooldown = .11*playerReloadScale();
+    const reloadFraction=magazineProgress/magazineReloadTime();magazineReloadStreak=0;
+    magazineProgress=reloadFraction*magazineReloadTime();magazineRounds--;updateAmmoHud();
+    if(abilityState.stunArmed){tank.recoil=.11;waves.push({owner:tank,hostile:false,x:tank.x,y:tank.y,angle:tank.turret,distance:0,life:1,hits:new Set()});abilityState.stunArmed=false;sound('rocketLaunch');publishAbilities(true);}else if(playerUpgrades.doubleShot){
+      const volleyId=++nextVolleyId,smartShot=abilityState.smartArmed,offset=bulletHeight*(playerUpgrades.heavy?1.5:1)*bulletPairHitScale/2+2;
+      emitShot(tank,playerBulletSpeed(),tank.turret,{sideOffset:-offset,smartShot,volleyId});
+      emitShot(tank,playerBulletSpeed(),tank.turret,{sideOffset:offset,smartShot,volleyId,silent:true});
+    }else emitShot(tank, playerBulletSpeed()); cooldown = .22*playerReloadScale(); clickCooldown = .11*playerReloadScale();
   }
   function cancelBulletPair(first,second){
     const firstProtected=first.bulletShield>0,secondProtected=second.bulletShield>0;
@@ -523,13 +533,15 @@
     // that overlap as one contact until they have separated.
     if(first.life>0&&second.life>0){(first.shieldContacts||=new Set()).add(second);(second.shieldContacts||=new Set()).add(first);}
   }
-  function magazineReloadTime(){return 1.05*.94*playerReloadScale();}
+  function magazineReloadTime(){return 1.05*.94*playerReloadScale()*.97**magazineReloadStreak;}
   function updateMagazine(dt){
-    if(magazineRounds>=playerAmmoLimit()){magazineProgress=0;return;}
+    if(magazineRounds>=playerAmmoLimit()){magazineProgress=0;magazineReloadStreak=0;return;}
     magazineProgress+=dt;
-    const interval=magazineReloadTime();
-    while(magazineProgress+1e-9>=interval&&magazineRounds<playerAmmoLimit()){magazineRounds++;magazineProgress=Math.max(0,magazineProgress-interval);}
-    if(magazineRounds===playerAmmoLimit())magazineProgress=0;
+    while(magazineRounds<playerAmmoLimit()){
+      const interval=magazineReloadTime();if(magazineProgress+1e-9<interval)break;
+      magazineRounds++;magazineProgress=Math.max(0,magazineProgress-interval);magazineReloadStreak++;
+    }
+    if(magazineRounds===playerAmmoLimit()){magazineProgress=0;magazineReloadStreak=0;}
     updateAmmoHud();
   }
   function updateAmmoHud(){
@@ -539,8 +551,8 @@
     const html=`<span class="ammo-count">${magazineRounds} / ${capacity}</span><div class="ammo-rounds">`+Array.from({length:capacity},(_,i)=>`<span class="ammo-round ${i<magazineRounds?'loaded':''}" style="--refill:${i===magazineRounds?progress:0}%"></span>`).join('')+'</div>';
     if(hud.innerHTML!==html)hud.innerHTML=html;
   }
-  function playerAmmoLimit(){return playerUpgrades.ammo?7:5;}
-  function playerReloadScale(){return .7**(playerUpgrades.reload||0);}
+  function playerAmmoLimit(){return (playerUpgrades.doubleShot?4:5)+(playerUpgrades.ammo?2:0);}
+  function playerReloadScale(){return .8**(playerUpgrades.reload||0);}
   function armSmartBullet(){
     if(!playerUpgrades.smart||!campaignCombat||abilityState.disruptTime>0||editing||!active||phase!=='playing'||!tank.alive||abilityState.smartCooldown>0)return;
     abilityState.queuedStun=false;abilityState.smartArmed=true;abilityState.stunArmed=false;publishAbilities(true);
@@ -560,7 +572,8 @@
     }
     s.smartDistance+=speed*dt;
   }
-  function playerMovementSpeed(){return movementSpeed*(1+.1*(playerUpgrades.forged||0))*(abilityState.dashTime>0?2.5:1);}
+  function playerEvading(){return !!playerUpgrades.evade&&abilityState.dashTime>0;}
+  function playerMovementSpeed(){return movementSpeed*(1+.17*(playerUpgrades.forged||0))*(abilityState.dashTime>0?2.5:1);}
   function playerBulletSpeed(){return 380*(1+.2*(playerUpgrades.rockets||0))*(abilityState.dashTime>0&&playerUpgrades.executor?1.2:1);}
   function activateLithe(){
     if(!playerUpgrades.lithe||abilityState.disruptTime>0||!campaignCombat||editing||!active||phase!=='playing'||!tank.alive||abilityState.dashTime>0||abilityState.dashCooldown>0)return;
@@ -581,7 +594,7 @@
       if(playerUpgrades.stun){abilityState.stunArmed=true;abilityState.smartArmed=false;abilityState.queuedStun=true;}
       publishAbilities(true);return;
     }
-    if(playerUpgrades.blessing&&abilityState.shieldTime<=0&&abilityState.shieldCooldown<=0){abilityState.shieldTime=playerUpgrades.endurance?3.3:1.85;tank.shieldTime=abilityState.shieldTime;}
+    if(playerUpgrades.blessing&&abilityState.shieldTime<=0&&abilityState.shieldCooldown<=0){abilityState.shieldTime=playerUpgrades.endurance?3.3:2;tank.shieldTime=abilityState.shieldTime;}
     if(playerUpgrades.stun&&!abilityState.stunArmed&&abilityState.stunCooldown<=0){abilityState.stunArmed=true;abilityState.smartArmed=false;abilityState.stunCooldown=6;}
     publishAbilities(true);
   }
@@ -591,21 +604,24 @@
     hud.hidden=!enabled;document.getElementById('arena-wrap').classList?.toggle('has-abilities',enabled);
     if(!enabled){hud.innerHTML='';return;}
     const cards=[];
-    function card(name,time,total,active,armed,path,key='Q',armedLabel='ARMED'){const ready=time<=0;const progress=active?time/total:1-time/total;
-      cards.push(`<div class="ability-card ${active?'active':armed?'armed':''}" role="img" aria-label="${name}: ${armed?armedLabel:active?'active':ready?'ready':Math.ceil(time)+' seconds remaining'}"><div class="ability-dial" style="--progress:${Math.round(clamp(progress,0,1)*360)}deg"><svg viewBox="0 0 32 32" aria-hidden="true">${path}</svg></div><div>${armed?armedLabel:active?Math.ceil(time)+'s':ready?'READY':Math.ceil(time)+'s'}</div><div>${key} · ${name}</div></div>`);}
-    if(playerUpgrades.blessing)card('Shield',abilityState.shieldTime||abilityState.shieldCooldown,abilityState.shieldTime?(playerUpgrades.endurance?3.3:1.85):13,abilityState.shieldTime>0,abilityState.queuedShield,'<path d="M16 2 29 7v9c0 7-7 12-13 15C10 28 3 23 3 16V7Z"/>','Q','QUEUED');
+    function card(name,time,total,active,armed,path,key='Q',armedLabel='ARMED'){
+      const jammed=abilityState.disruptTime>0,blocked=key==='SPACE'&&armed&&armedLabel!=='QUEUED';
+      const ready=time<=0&&!active&&!armed&&!jammed;
+      const state=jammed?'jammed':blocked?'blocked':active?'active':armed?'armed':ready?'ready':'cooldown';
+      const label=jammed?'JAMMED':blocked?armedLabel:armed?armedLabel:active?'ACTIVE':ready?'READY':Math.ceil(time)+'s';
+      const progress=active?time/total:blocked?0:armed?1:1-time/total;
+      const accessible=jammed?'abilities jammed':blocked?armedLabel:armed?armedLabel:active?'active':ready?'ready':Math.ceil(time)+' seconds remaining';
+      cards.push(`<div class="ability-card ${state}" style="--charge:${Math.round(clamp(progress,0,1)*100)}%" role="img" aria-label="${name}: ${accessible}. Press ${key}." aria-keyshortcuts="${key==='SPACE'?'Space':key==='SHIFT'?'Shift':key}"><div class="ability-top"><svg class="ability-emblem" viewBox="0 0 32 32" aria-hidden="true">${path}</svg><kbd class="ability-key">${key}</kbd></div><div class="ability-name">${name}</div><div class="ability-state"><span class="ability-light" aria-hidden="true"></span>${label}</div></div>`);
+    }
+    if(playerUpgrades.blessing)card('Shield',abilityState.shieldTime||abilityState.shieldCooldown,abilityState.shieldTime?(playerUpgrades.endurance?3.3:2):13,abilityState.shieldTime>0,abilityState.queuedShield,'<path d="M16 2 29 7v9c0 7-7 12-13 15C10 28 3 23 3 16V7Z"/>','Q','QUEUED');
     if(playerUpgrades.stun)card('Stun',abilityState.stunCooldown,6,false,abilityState.stunArmed,'<path d="M18 1 4 18h10l-2 13 16-19H18Z"/>');
     if(playerUpgrades.smart)card('Smart Bullet',abilityState.smartCooldown,3,false,abilityState.smartArmed,'<path d="M4 25Q4 8 23 8l-6-5m6 5-6 5" fill="none" stroke="currentColor" stroke-width="3"/>','E');
     if(playerUpgrades.lithe)card('Dash',abilityState.dashTime||abilityState.dashCooldown,abilityState.dashTime?1:6,abilityState.dashTime>0,abilityState.queuedDash,'<path d="M2 11h28v13H2Z"/><path d="m9 2 7 7 7-7" fill="none" stroke="currentColor" stroke-width="3"/>','SHIFT','QUEUED');
     if(playerUpgrades.typhon)card('Mines',mineCooldown,playerUpgrades.fires?1.5:3,false,abilityState.queuedMine||mines.length>=mineCapacity(),'<circle cx="16" cy="18" r="10"/><path d="M16 1v6M2 8l5 5m23-5-5 5" stroke="currentColor" stroke-width="3"/>','SPACE',abilityState.queuedMine?'QUEUED':mines.length+'/'+mineCapacity()+' DEPLOYED');
     const html=cards.join('');if(html!==abilityHudKey){abilityHudKey=html;hud.innerHTML=html;}
   }
-  function applyShieldContact(){
-    if(!tank.alive||!playerUpgrades.hero||!(tank.shieldTime>0))return;
-    for(const e of enemies)if(e.alive){const box=hullBox(e),c=Math.cos(e.hull),sn=Math.sin(e.hull),dx=tank.x-e.x,dy=tank.y-e.y,x=dx*c+dy*sn,y=-dx*sn+dy*c;
-      if(Math.hypot(x-clamp(x,-box.hx,box.hx),y-clamp(y,-box.hy,box.hy))<=tank.shieldRadius)hitTank({life:1},e);
-    }
-  }
+  function pulseRange(w){return w.hostile?flameRange:450*(1+.1*(playerUpgrades.pulseWidth||0));}
+  function pulseHalfAngle(w){return w.hostile?flameHalfAngle:Math.asin(100*(1+.2*(playerUpgrades.pulseWidth||0))/pulseRange(w));}
   function updatePlayerAbilities(dt){
     abilityState.disruptTime=Math.max(0,(abilityState.disruptTime||0)-dt);
     if(campaignCombat){
@@ -618,24 +634,33 @@
     }
     for(const e of enemies){e.disruptTime=Math.max(0,(e.disruptTime||0)-dt);e.fireGrace=Math.max(0,(e.fireGrace||0)-dt);e.hitFlash=Math.max(0,(e.hitFlash||0)-dt);e.stunTime=Math.max(0,(e.stunTime||0)-dt);if(e.stunTime>0)e.stunVisualAge=(e.stunVisualAge||0)+dt;}
     for(const wave of waves)if(wave.life>0){
-      wave.distance=Math.min(flameRange,wave.distance+Levels.aiTypes.teal.shellSpeed*(wave.hostile?.6:1)*dt);
+      wave.distance=Math.min(pulseRange(wave),wave.distance+Levels.aiTypes.teal.shellSpeed*(wave.hostile?.6:1)*dt);
       const emitter={x:wave.x,y:wave.y,flame:{angle:wave.angle,age:1.7}};
       const origin=flameOrigin(emitter);
       if(wave.hostile){
-        if(tank.alive&&!wave.hits.has(tank)&&Math.hypot(tank.x-origin.x,tank.y-origin.y)>=wave.distance-90&&flameTouches(emitter,hullBox(tank),wave.distance)){
+        if(tank.alive&&!wave.hits.has(tank)&&Math.hypot(tank.x-origin.x,tank.y-origin.y)>=wave.distance-90&&flameTouches(emitter,hullBox(tank),wave.distance,pulseHalfAngle(wave))){
           wave.hits.add(tank);hitTank({life:1,disruptor:true,sourceX:origin.x,sourceY:origin.y},tank);
         }
-      }else for(const e of enemies)if(e.alive&&!e.mounted&&!wave.hits.has(e)&&Math.hypot(e.x-origin.x,e.y-origin.y)>=wave.distance-90&&flameTouches(emitter,hullBox(e),wave.distance)){
-        wave.hits.add(e);e.stunTime=playerUpgrades.grasp?4:1;e.vx=0;e.vy=0;e.stunVisualAge=0;e.pendingThreat=null;
+      }else for(const e of enemies)if(e.alive&&!e.mounted&&!wave.hits.has(e)&&Math.hypot(e.x-origin.x,e.y-origin.y)>=wave.distance-90&&flameTouches(emitter,hullBox(e),wave.distance,pulseHalfAngle(wave))){
+        wave.hits.add(e);
+        if(e.shieldTime>0){
+          if(Levels.aiTypes[e.type].commander)breakCommanderShield(e);
+          else {e.shieldTime=0;e.shieldCooldown=Math.max(e.shieldCooldown||0,6);e.offenseTime=0;puff(e.x,e.y);sound('shieldRicochet');}
+        }
+        e.stunTime=playerUpgrades.grasp?4:1;e.vx=0;e.vy=0;e.stunVisualAge=0;e.pendingThreat=null;
       }
-      if(wave.distance>=flameRange)wave.life=0;
+      if(!wave.hostile&&playerUpgrades.reversal){
+        wave.reversed ||= new Set();
+        for(const shot of shells)if(shot.life>0&&shot.owner!==tank&&!wave.reversed.has(shot)&&Math.hypot(shot.x-origin.x,shot.y-origin.y)>=wave.distance-90&&flameTouches(emitter,shellBox(shot),wave.distance,pulseHalfAngle(wave))){shot.vx*=-1;shot.vy*=-1;shot.playerCredit=true;wave.reversed.add(shot);puff(shot.x,shot.y);}
+      }
+      if(wave.distance>=pulseRange(wave))wave.life=0;
     }
     waves=waves.filter(w=>w.life>0);publishAbilities();
   }
   function drawEnergyWaves(){
-    for(const w of waves){const origin={x:w.x+Math.cos(w.angle)*51,y:w.y+Math.sin(w.angle)*51};ctx.save();ctx.strokeStyle=w.hostile?'#c18af0':'#7bdfff';ctx.fillStyle=w.hostile?'rgba(170,87,222,.26)':'rgba(92,178,255,.24)';ctx.lineWidth=4;ctx.shadowColor=w.hostile?'#a86be3':'#65bcff';ctx.shadowBlur=12;ctx.beginPath();
-      for(let i=0;i<=40;i++){const a=w.angle-flameHalfAngle+flameHalfAngle*2*i/40,d=flameDistance(origin,a,w.distance);const x=origin.x+Math.cos(a)*d,y=origin.y+Math.sin(a)*d;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);}
-      ctx.stroke();for(let i=40;i>=0;i--){const a=w.angle-flameHalfAngle+flameHalfAngle*2*i/40,d=flameDistance(origin,a,Math.max(.01,w.distance-35));ctx.lineTo(origin.x+Math.cos(a)*d,origin.y+Math.sin(a)*d);}ctx.closePath();ctx.fill();ctx.restore();
+    for(const w of waves){const halfAngle=pulseHalfAngle(w),origin={x:w.x+Math.cos(w.angle)*51,y:w.y+Math.sin(w.angle)*51};ctx.save();ctx.strokeStyle=w.hostile?'#c18af0':'#7bdfff';ctx.fillStyle=w.hostile?'rgba(170,87,222,.26)':'rgba(92,178,255,.24)';ctx.lineWidth=4;ctx.shadowColor=w.hostile?'#a86be3':'#65bcff';ctx.shadowBlur=12;ctx.beginPath();
+      for(let i=0;i<=40;i++){const a=w.angle-halfAngle+halfAngle*2*i/40,d=flameDistance(origin,a,w.distance);const x=origin.x+Math.cos(a)*d,y=origin.y+Math.sin(a)*d;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);}
+      ctx.stroke();for(let i=40;i>=0;i--){const a=w.angle-halfAngle+halfAngle*2*i/40,d=flameDistance(origin,a,Math.max(.01,w.distance-35));ctx.lineTo(origin.x+Math.cos(a)*d,origin.y+Math.sin(a)*d);}ctx.closePath();ctx.fill();ctx.restore();
     }
   }
   function canEnemyOccupy(e,x,y) {return canTankPose(e,x,y);}
@@ -1081,13 +1106,13 @@
   }
   // Cast rays at a rectangle's angular extrema as well as the cone edges.
   // The visible cone and damage use the same wall-limited ray distances.
-  function flameTouches(e,box,reach=null){
+  function flameTouches(e,box,reach=null,halfAngle=flameHalfAngle){
     if(!e.flame)return false;
     const range=reach??flameReach(e),origin=flameOrigin(e),a=e.flame.angle,c=Math.cos(box.angle),sn=Math.sin(box.angle);
-    const candidates=[a-flameHalfAngle,a,a+flameHalfAngle,Math.atan2(box.y-origin.y,box.x-origin.x)];
+    const candidates=[a-halfAngle,a,a+halfAngle,Math.atan2(box.y-origin.y,box.x-origin.x)];
     for(const x of [-box.hx,box.hx])for(const y of [-box.hy,box.hy])candidates.push(Math.atan2(box.y+x*sn+y*c-origin.y,box.x+x*c-y*sn-origin.x));
     for(const angle of candidates){
-      if(Math.abs(angleDelta(a,angle))>flameHalfAngle+1e-8)continue;
+      if(Math.abs(angleDelta(a,angle))>halfAngle+1e-8)continue;
       const rx=origin.x-box.x,ry=origin.y-box.y,dx=Math.cos(angle)*range,dy=Math.sin(angle)*range;
       const hit=segmentBox(rx*c+ry*sn,-rx*sn+ry*c,dx*c+dy*sn,-dx*sn+dy*c,{x:-box.hx,y:-box.hy,width:box.hx*2,height:box.hy*2});
       const inside=Math.abs(rx*c+ry*sn)<=box.hx&&Math.abs(-rx*sn+ry*c)<=box.hy;
@@ -1203,7 +1228,7 @@
   function updateMortars(dt){
     for(const m of [...mortars]){
       m.age+=dt;
-      if(m.age>=m.duration){mortars.splice(mortars.indexOf(m),1);mineBlast({x:m.targetX,y:m.targetY},mortarBlastRadius,false);if(phase==='dying')break;}
+      if(m.age>=m.duration){mortars.splice(mortars.indexOf(m),1);mineBlast({x:m.targetX,y:m.targetY,owner:m.owner},mortarBlastRadius,false);if(phase==='dying')break;}
     }
   }
   function mortarShadowRadius(m){return mortarBlastRadius*clamp(m.age/Math.max(.01,m.duration-.4),0,1);}
@@ -1265,7 +1290,7 @@
     if(!contact.shield){for(let i=0;i<5;i++){const a=i*2.4;embers.push({x:s.x,y:s.y,vx:Math.cos(a)*45,vy:Math.sin(a)*45,age:0,life:.15});}}
     if(contact.shield===tank){
       if(contact.partial||!playerUpgrades.favored){s.life=0;puff(s.x,s.y);if(!contact.partial)breakPlayerShield();return;}
-      reflectShot(s,contact);s.bounces++;sound('shieldRicochet');breakPlayerShield();return;
+      reflectShot(s,contact);s.playerCredit=true;s.bounces++;sound('shieldRicochet');breakPlayerShield();return;
     }
     if (s.bounces >= (s.maxBounces ?? 1)) { s.life = 0; puff(s.x, s.y); return; }
     reflectShot(s,contact);
@@ -1277,7 +1302,7 @@
     for (let along = 3 - s.smokeDistance; along <= distance; along += 3) {
       const t = along / distance;
       smoke.push({ x: ox + (s.x - ox) * t, y: oy + (s.y - oy) * t, age: dt * (1 - t),
-        life: s.rocket ? .4 : .24, driftX: (Math.random() - .5) * 16, driftY: (Math.random() - .5) * 16, phase: Math.random() * Math.PI * 2 });
+        life: (s.rocket ? .4 : .24)*1.25, opacity:.38, driftX: (Math.random() - .5) * 16, driftY: (Math.random() - .5) * 16, phase: Math.random() * Math.PI * 2 });
     }
     s.exhaustTimer=(s.exhaustTimer||0)+dt;
     if((s.rocket||s.playerRocketStacks)&&s.exhaustTimer>=.03){
@@ -1293,7 +1318,7 @@
     if(!campaignCombat||abilityState.disruptTime>0||!playerUpgrades.typhon||editing||!active||phase!=='playing'||!tank.alive||mineCooldown>0||mines.length>=mineCapacity())return;
     if(countdown>0){abilityState.queuedMine=true;publishAbilities(true);return;}
     const armDuration=playerUpgrades.demolitions?.5:mineArmDuration;
-    mines.push({x:tank.x,y:tank.y,fuse:null,armTime:armDuration,armDuration});mineCooldown=playerUpgrades.fires?1.5:3;mineSound('place');updateAbilityHud();
+    mines.push({owner:tank,x:tank.x,y:tank.y,fuse:null,armTime:armDuration,armDuration});mineCooldown=playerUpgrades.fires?1.5:3;mineSound('place');updateAbilityHud();
   }
   function blastVisible(origin,target){return !walls.some(w=>w.type!=='hole'&&segmentBox(origin.x,origin.y,target.x-origin.x,target.y-origin.y,w));}
   function circleHitsBox(origin,radius,box){
@@ -1302,7 +1327,7 @@
   }
   function mineBlast(origin,radius,protectPlayer=false,blue=false){
     mineBlasts.push({x:origin.x,y:origin.y,radius,age:0,blue,seed:Math.random()*Math.PI*2});puff(origin.x,origin.y,true);mineSound('explode');addScorch(origin.x,origin.y,radius*.55);
-    for(const e of enemies)if(e.alive&&circleHitsBox(origin,radius,hullBox(e))&&blastVisible(origin,e))hitTank({life:1,sourceX:origin.x,sourceY:origin.y},e);
+    for(const e of enemies)if(e.alive&&circleHitsBox(origin,radius,hullBox(e))&&blastVisible(origin,e))hitTank({life:1,owner:origin.owner||tank,sourceX:origin.x,sourceY:origin.y},e);
     for(const s of shells)if(s.life>0&&circleHitsBox(origin,radius,shellBox(s))&&blastVisible(origin,s))s.life=0;
     for(const m of [...mines])if(mines.includes(m)&&Math.hypot(m.x-origin.x,m.y-origin.y)<=radius+mineRadius&&blastVisible(origin,m)) {if(m.flight)detonateMine(m);else launchMine(m);}
     if(!protectPlayer&&tank.alive&&circleHitsBox(origin,radius,hullBox(tank))&&blastVisible(origin,tank))hitTank({life:1,sourceX:origin.x,sourceY:origin.y},tank);
@@ -1407,6 +1432,12 @@
       ctx.restore();
     }
   }
+  function playerDamageFeedback(audible){
+    damageFlashTime=.35;document.getElementById('damage-flash').style.opacity=.8;
+    const hearts=document.getElementById('combat-hearts');hearts.style.animation='none';void hearts.offsetWidth;hearts.style.animation='heart-damage .38s ease-out';
+    const lost=hearts.querySelectorAll?.('.heart-slot')?.[playerHearts];lost?.classList?.toggle('heart-lost',true);
+    if(audible)mineSound('playerDamage');
+  }
   function playerHitEffect(s){
     const angle=Number.isFinite(s.x)&&Number.isFinite(s.y)?Math.atan2(s.y-tank.y,s.x-tank.x):Number.isFinite(s.sourceX)?Math.atan2(s.sourceY-tank.y,s.sourceX-tank.x):tank.hull;
     const c=Math.cos(tank.hull),sn=Math.sin(tank.hull),px=Math.cos(angle)*40,py=Math.sin(angle)*40,lx=clamp(px*c+py*sn,-31,31),ly=clamp(-px*sn+py*c,-29,29);
@@ -1428,8 +1459,19 @@
   function drawHitImpacts(){
     for(const hit of hitImpacts){const fade=Math.max(0,1-hit.age/.13);ctx.save();ctx.translate(hit.x,hit.y);ctx.globalAlpha=fade;ctx.fillStyle='#fff1b4';ctx.beginPath();ctx.arc(0,0,3+fade*5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f3ae4c';ctx.lineWidth=2;for(let i=0;i<6;i++){const a=i*Math.PI/3;ctx.beginPath();ctx.moveTo(Math.cos(a)*4,Math.sin(a)*4);ctx.lineTo(Math.cos(a)*(9+fade*8),Math.sin(a)*(9+fade*8));ctx.stroke();}ctx.restore();}
   }
+  function panicClearBullets(){
+    if(!playerUpgrades.panic)return;
+    for(const shot of shells)if(shot.life>0&&shot.owner!==tank){shot.life=0;puff(shot.x,shot.y);}
+    for(const e of enemies)if(e.alive&&!e.mounted){e.stunTime=Math.max(e.stunTime||0,1.5);e.vx=0;e.vy=0;e.stunVisualAge=0;e.pendingThreat=null;}
+  }
+  function recordPlayerKill(shot){
+    if(!playerUpgrades.battleRhythm||!(shot.owner===tank||shot.playerCredit))return;
+    battleRhythmKills++;if(campaignCombat){campaignCombat.battleRhythmKills=battleRhythmKills;campaignCombat.onBattleRhythmKills?.(battleRhythmKills);}
+    if(battleRhythmKills%2===0){magazineRounds=playerAmmoLimit();magazineProgress=0;magazineReloadStreak=0;updateAmmoHud();}
+  }
   function hitTank(s, victim) {
     if(!victim.alive||victim.mounted)return;
+    if(victim===tank&&playerEvading()&&Number.isFinite(s.vx)&&Number.isFinite(s.vy)&&!s.fireDamage)return;
     if(victim.shieldTime>0) return;
     if(victim===tank&&tank.swivelTime>0){
       const angle=Number.isFinite(s.sourceX)?Math.atan2(s.sourceY-tank.y,s.sourceX-tank.x):Number.isFinite(s.vx)?Math.atan2(-s.vy,-s.vx):null;
@@ -1445,18 +1487,18 @@
     if(victim === tank && campaignCombat) {
       s.life=0;
       if(hitGrace>0)return;
-      playerHearts=Math.max(0,playerHearts-1);campaignCombat.hearts=playerHearts;
+      playerHearts=Math.max(0,playerHearts-1);campaignCombat.hearts=playerHearts;panicClearBullets();
       Levels.renderHearts(document.getElementById('combat-hearts'),playerHearts,campaignCombat.maxHearts);
-      campaignCombat.onHealthChange?.(playerHearts);
-      if(playerHearts>0){hitGrace=1.2;playerHitEffect(s);puff(tank.x,tank.y);sound('impact');return;}
+      campaignCombat.onHealthChange?.(playerHearts);playerDamageFeedback(playerHearts>0);
+      if(playerHearts>0){hitGrace=1.2;playerHitEffect(s);puff(tank.x,tank.y);return;}
     }
     s.life = 0; victim.flame = null; victim.alive = false; victim.vx = 0; victim.vy = 0;
-    if(victim!==tank){puff(victim.x,victim.y,true);addScorch(victim.x,victim.y,32);sound('explosion');bursts.push({x:victim.x,y:victim.y,age:0});}
+    if(victim!==tank){campaignCombat?.onEnemyDestroyed?.();recordPlayerKill(s);puff(victim.x,victim.y,true);addScorch(victim.x,victim.y,32);sound('explosion');bursts.push({x:victim.x,y:victim.y,age:0});}
     if(victim===tank&&campaignCombat&&playerUpgrades.forgiveness){
       mineBlast(tank,225,true);
       if(combatEnemies().every(e=>!e.alive)){tank.alive=true;playerHearts=1;campaignCombat.hearts=1;hitGrace=1.2;Levels.renderHearts(document.getElementById('combat-hearts'),1,campaignCombat.maxHearts);campaignCombat.onHealthChange?.(1);}
     }
-    if(victim===tank&&!tank.alive)beginPlayerDeath(s);
+    if(victim===tank&&!tank.alive){if(!campaignCombat)playerDamageFeedback(false);beginPlayerDeath(s);}
   }
   function finishRound() {
     if(abilityState.shieldTime>0){abilityState.shieldTime=0;abilityState.shieldCooldown=13;tank.shieldTime=0;}
@@ -1470,6 +1512,7 @@
     window.TankGame.onRoundEnd?.({ won: phase === 'won', hearts: playerHearts });
   }
   function updateEffects(dt) {
+    damageFlashTime=Math.max(0,damageFlashTime-dt);document.getElementById('damage-flash').style.opacity=.8*damageFlashTime/.35;
     for(const h of hitImpacts)h.age+=dt;hitImpacts=hitImpacts.filter(h=>h.age<.13);tank.hitFlash=Math.max(0,(tank.hitFlash||0)-dt);
     for(const m of groundMarks)m.age+=dt;groundMarks=groundMarks.filter(m=>m.age<m.life);
     for(const f of muzzleFlashes)f.age+=dt;muzzleFlashes=muzzleFlashes.filter(f=>f.age<.09);
@@ -1482,7 +1525,7 @@
     bursts = bursts.filter(b => b.age < (b.duration||.65));
   }
   function activateCountdownQueue(){
-    if(abilityState.queuedShield){abilityState.shieldTime=playerUpgrades.endurance?3.3:1.85;tank.shieldTime=abilityState.shieldTime;}
+    if(abilityState.queuedShield){abilityState.shieldTime=playerUpgrades.endurance?3.3:2;tank.shieldTime=abilityState.shieldTime;}
     if(abilityState.queuedStun&&abilityState.stunArmed)abilityState.stunCooldown=6;
     const dash=abilityState.queuedDash,mine=abilityState.queuedMine;
     abilityState.queuedShield=abilityState.queuedDash=abilityState.queuedMine=abilityState.queuedStun=false;
@@ -1530,7 +1573,6 @@
     movementSound(Math.hypot(tank.x - ox, tank.y - oy) > .001, dt);
     updateAim(dt);
 
-    applyShieldContact();
     updateDuplicators(dt);
     for (const e of enemies) updateShield(dt,e);
     for (const e of enemies) updateMobileEnemy(dt, e);
@@ -1560,6 +1602,7 @@
         const first = shells[a]; if (first.life <= 0) continue;
         for (let b = a + 1; b < shells.length; b++) {
           const second = shells[b]; if (second.life <= 0) continue;
+          if(first.volleyId!=null&&first.volleyId===second.volleyId)continue;
           const touching=rectanglesOverlap(shellBox(first,true),shellBox(second,true));
           if(!touching){first.shieldContacts?.delete(second);second.shieldContacts?.delete(first);continue;}
           if(first.shieldContacts?.has(second))continue;
@@ -1572,6 +1615,7 @@
         if(phase==='dying')break;
         for (const victim of [tank, ...enemies]) {
           if(s.owner?.parent===victim&&!s.parentCleared){if(!rectanglesOverlap(shellBox(s),hullBox(victim)))s.parentCleared=true;else continue;}
+          if(victim===tank&&playerEvading())continue;
           if (victim.alive && !victim.mounted && rectanglesOverlap(shellBox(s), hullBox(victim))) { hitTank(s, victim); break; }
         }
       }
@@ -1660,6 +1704,7 @@
       ctx.beginPath();ctx.arc(t.x,t.y,t.shieldRadius||48,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
     }
     ctx.save();if(t.dupSpawnTime>0)ctx.globalAlpha=.2+.8*(1-t.dupSpawnTime/.45);if(t===tank&&hitGrace>0)ctx.globalAlpha=Math.floor(hitGrace*12)%2?.35:1;
+    if(t===tank&&playerEvading())ctx.globalAlpha*=.55;
     ctx.translate(t.x+(t===tank&&deathSequence&&!deathSequence.exploded?Math.sin(deathSequence.elapsed*120)*2:0),t.y);ctx.scale(scale*actorSize(t),scale*actorSize(t));
     Levels.paintTank(ctx,palette,{hull:t.hull,turret:t.turret,tread:isEnemy?t.tread||0:tread,recoil:(t.recoil||0)/.11,type:isEnemy?t.type:'player',turrets:t.guns?.map(g=>g.turret),turretRecoils:t.guns?.map(g=>(g.recoil||0)/.11),damage:t===tank&&deathSequence&&!deathSequence.exploded?2:isEnemy&&Levels.aiTypes[t.type].armored?(Levels.aiTypes[t.type].health||3)-(t.health??3):0,mortarTurret:t.mortarTurret,mortarCharging:t.type==='commander'&&t.commanderWeapon==='mortar'&&t.charge>0,jamCharging:t.type==='commander'&&t.commanderWeapon==='jam'&&t.charge>0,glintTime:t.age||0,heat:t.flame?flameReach(t)/flameRange:t.shieldTime?1:0,warning:isEnemy&&(t.type==='navy'?t.charge>=.6:t.charge>0&&(!Levels.aiTypes[t.type].elite||Math.floor(t.charge*12)%2===0))});
     ctx.restore();

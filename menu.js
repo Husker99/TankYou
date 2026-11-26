@@ -72,7 +72,7 @@
     button.onclick = () => playLevel(level);
     $('menu-levels').appendChild(button);
   }
-  function hideEditorScreens() { cancelVictory(); $('upgrade-view').hidden=true; $('editor-choice-view').hidden=true;$('map-editor-view').hidden=true; }
+  function hideEditorScreens() { $('run-end-view').hidden=true; cancelVictory(); $('upgrade-view').hidden=true; $('editor-choice-view').hidden=true;$('map-editor-view').hidden=true; }
   function showEditorChooser() {
     cancelVictory();
     Campaign?.suspend();quickPlayIndex=-1;cleared=false;Game.setEditing(true);
@@ -103,7 +103,7 @@
         if(!upgrades.length){const item=document.createElement('span');item.textContent='No upgrades yet';list.appendChild(item);}
         victoryTimer=setTimeout(returnFromVictory,1500);
       }
-      if(!won){$('result-detail').hidden=false;$('result-detail').textContent='Your hearts are gone. This run has ended.';}
+      if(!won){Campaign.open();}
       return;
     }
     cleared = quickPlayIndex >= 0;
@@ -128,6 +128,7 @@
         $('game-header').hidden=true;$('campaign-view').hidden=false;
         inMenu=true;startMusic();
       },
+      onRunEnd(){hideEditorScreens();Game.setEditing(true);$('menu-view').hidden=true;$('game-view').hidden=true;$('editor-view').hidden=true;$('campaign-view').hidden=true;$('game-header').hidden=true;inMenu=false;stopMusic();},
       onUpgrade(){hideEditorScreens();Game.setEditing(true);$('menu-view').hidden=true;$('game-view').hidden=true;$('editor-view').hidden=true;$('campaign-view').hidden=true;$('game-header').hidden=true;$('upgrade-view').hidden=false;inMenu=false;stopMusic();},
       onCombat(level,options) {
         hideEditorScreens();

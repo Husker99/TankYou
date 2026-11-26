@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const Levels=window.TankLevels;
-  const types={combat:'Combat',heart:'+1 Heart',refill:'Refill All Hearts',stygian:'Armor',lethe:'Mobility',phleg:'Armaments',ache:'Gunnery'};
+  const types={combat:'Combat',heart:'+1 Heart',refill:'Refill All Hearts',stygian:'Armor',lethe:'Mobility',phleg:'Armaments',ache:'Gunnery',command:'Command Center'};
   function validate(input,playable=true){
     if(input&&input.columns!==3&&Array.isArray(input.nodes)){
       const remap=new Map(),nodes=[];
